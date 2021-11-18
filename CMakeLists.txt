@@ -4,7 +4,7 @@ project(main)
 find_package(OpenCL REQUIRED)
 find_package(SFML 2.5.1 COMPONENTS graphics audio system REQUIRED)
 find_package(OpenMP REQUIRED)
-# include_directories(${OpenCL_INCLUDE_DIRS})
+include_directories(${OpenCL_INCLUDE_DIRS})
 # include_directories(${SFML_INCLUDE_DIRS})
 include_directories(include)
 
