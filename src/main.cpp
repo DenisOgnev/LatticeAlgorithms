@@ -2,8 +2,9 @@
 #include <iostream>
 #include <omp.h>
 #include "SFML/Graphics.hpp"
+#include <utils.h>
 
 int main()
 {
-	std::cout << "TEST" << std::endl;
+	std::cout << "test" << std::endl;
 }

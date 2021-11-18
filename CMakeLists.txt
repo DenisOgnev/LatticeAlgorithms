@@ -1,11 +1,12 @@
 cmake_minimum_required(VERSION 3.0)
-project(main)
+project(LatticeAlgotirhms)
+
+set(BUILD_SHARED_LIBS FALSE)
+add_subdirectory(3rdparty/SFML)
 
 find_package(OpenCL REQUIRED)
-find_package(SFML 2.5.1 COMPONENTS graphics audio system REQUIRED)
 find_package(OpenMP REQUIRED)
 include_directories(${OpenCL_INCLUDE_DIRS})
-# include_directories(${SFML_INCLUDE_DIRS})
 include_directories(include)
 
 add_executable(main src/main.cpp src/utils.cpp)
