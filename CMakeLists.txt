@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 3.0)
 project(LatticeAlgotirhms)
 
+file(GLOB SRC
+     "src/*.cpp"
+)
+
 set(BUILD_SHARED_LIBS FALSE)
 add_subdirectory(3rdparty/SFML)
 
@@ -9,7 +13,7 @@ find_package(OpenMP REQUIRED)
 include_directories(${OpenCL_INCLUDE_DIRS})
 include_directories(include)
 
-add_executable(main src/main.cpp src/utils.cpp)
+add_executable(main ${SRC})
 
 target_link_libraries(main ${OpenCL_LIBRARIES})
 target_link_libraries(main OpenMP::OpenMP_CXX)
