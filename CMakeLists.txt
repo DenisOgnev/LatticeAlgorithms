@@ -7,6 +7,7 @@ file(GLOB SRC
 
 set(BUILD_SHARED_LIBS FALSE)
 add_subdirectory(3rdparty/SFML)
+add_subdirectory(3rdparty/Eigen)
 
 find_package(OpenCL REQUIRED)
 find_package(OpenMP REQUIRED)
