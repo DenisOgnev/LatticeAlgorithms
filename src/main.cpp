@@ -4,6 +4,7 @@
 #include "SFML/Graphics.hpp"
 #include "utils.h"
 #include "algorithms.h"
+#include <Eigen/Dense>
 
 int main()
 {
