@@ -27,6 +27,8 @@ def HNF_problem():
     #     [b1m, .., bnm]
     B = generate_random_matrix_with_full_row_rank(m, n, lowest, highest)
 
+    B = np.array([[2, 1, 2], [4, 3, 3], [4, 1, 1]])
+
     print("B = \n{}".format(B))
     print("B.T = \n{}".format(B.T))
 
@@ -178,8 +180,8 @@ def main():
     # union_of_lattices_problem_HNF()
     # containtment_problem_HNF()
     # membership_problem_HNF()
-    # HNF_problem()
-    CVP_problem()
+    HNF_problem()
+    # CVP_problem()
 
 
 if __name__ == '__main__':

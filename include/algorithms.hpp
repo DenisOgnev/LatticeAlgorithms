@@ -1,5 +1,5 @@
-#ifndef __ALGOTITHMS_H__
-#define __ALGOTITHMS_H__
+#ifndef ALGOTITHMS_HPP
+#define ALGOTITHMS_HPP
 
 namespace Algorithms
 {

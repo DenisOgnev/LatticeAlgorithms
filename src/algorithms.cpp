@@ -1,4 +1,4 @@
-#include "algorithms.h"
+#include "algorithms.hpp"
 #include <iostream>
 
 namespace Algorithms
