@@ -25,20 +25,20 @@ def HNF_problem():
     #     [b12, .., bn2]
     #     ..............
     #     [b1m, .., bnm]
-    B = generate_random_matrix_with_full_row_rank(m, n, lowest, highest)
+    # B = generate_random_matrix_with_full_row_rank(m, n, lowest, highest)
 
-    B = np.array([[2, 1, 2], [4, 3, 3], [4, 1, 1]])
+    # B = np.array([[2, 1, 2], [4, 3, 3], [4, 1, 1]])
 
-    print("B = \n{}".format(B))
-    print("B.T = \n{}".format(B.T))
+    # print("B = \n{}".format(B))
+    # print("B.T = \n{}".format(B.T))
 
-    # get HNF of full ranked B
-    H = HNF_full_row_rank(B)
-    H_str = get_HNF_from_wolfram_alpha(B.T)
+    # # get HNF of full ranked B
+    # H = HNF_full_row_rank(B)
+    # H_str = get_HNF_from_wolfram_alpha(B.T)
 
-    print("HNF(B) = \n{}\n".format(H))
-    print("HNF(B).T = \n{}\n".format(H.T))
-    print("HNF(B) from wolfram alpha = \n{}".format(H_str))
+    # print("HNF(B) = \n{}\n".format(H))
+    # print("HNF(B).T = \n{}\n".format(H.T))
+    # print("HNF(B) from wolfram alpha = \n{}".format(H_str))
 
     m = 5  # size of vector
     n = 3  # number of vectors

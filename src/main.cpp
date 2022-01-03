@@ -31,6 +31,18 @@ Eigen::MatrixXd generate_random_matrix_with_full_row_rank(const int m, const int
 	return matrix;
 }
 
+Eigen::MatrixXd generate_random_matrix(const int m, const int n, double lowest, double highest)
+{
+	std::random_device rd;
+	std::mt19937 gen(rd());
+	std::uniform_real_distribution<double> dis(lowest, highest);
+
+	Eigen::MatrixXd matrix = Eigen::MatrixXd::NullaryExpr(m, n, [&]()
+														  { return double(int(dis(gen))); });
+
+	return matrix;
+}
+
 Eigen::MatrixXd gram_schmidt(Eigen::MatrixXd matrix, bool normalize = false, bool delete_zero_rows = true)
 {
 	std::vector<Eigen::VectorXd> basis;
@@ -105,6 +117,34 @@ Eigen::MatrixXd get_linearly_independent_columns_by_gram_schmidt(Eigen::MatrixXd
 		result.col(i) = matrix.col(indexes[i]);
 	}
 	return result;
+}
+
+std::tuple<Eigen::MatrixXd, std::vector<int>> get_linearly_independent_rows_by_gram_schmidt(Eigen::MatrixXd matrix)
+{
+	std::vector<Eigen::VectorXd> basis;
+	std::vector<int> indexes;
+	for (int i = 0; i < matrix.rows(); i++)
+	{
+		Eigen::VectorXd vec = matrix.row(i);
+		Eigen::VectorXd projections = Eigen::VectorXd::Zero(vec.size());
+		for (const auto &b : basis)
+		{
+			projections += (vec.dot(b) / b.dot(b)) * b;
+		}
+		Eigen::VectorXd result = vec - projections;
+		bool is_all_zero = result.isZero(1e-3);
+		if (!is_all_zero)
+		{
+			basis.push_back(result);
+			indexes.push_back(i);
+		}
+	}
+	Eigen::MatrixXd result(basis.size(), matrix.cols());
+	for (size_t i = 0; i < indexes.size(); i++)
+	{
+		result.row(i) = matrix.row(indexes[i]);
+	}
+	return std::make_tuple(result, indexes);
 }
 
 double det_by_gram_schmidt(Eigen::MatrixXd matrix)
@@ -195,17 +235,11 @@ Eigen::MatrixXd add_column(Eigen::MatrixXd H, Eigen::ArrayXd b_column)
 	return result;
 }
 
-int main()
+Eigen::MatrixXd HNF_full_row_rank(Eigen::MatrixXd B)
 {
-	const int m = 3; // size of vector
-	const int n = 3; // number of vectors
-	const double lowest = 0;
-	const double highest = 5;
-
-	Eigen::MatrixXd B = generate_random_matrix_with_full_row_rank(m, n, lowest, highest);
-
+	int m = B.rows();
+	int n = B.cols();
 	Eigen::MatrixXd B_stroke = get_linearly_independent_columns_by_gram_schmidt(B);
-	std::cout << B_stroke << "\n\n";
 
 	double det = round(det_by_gram_schmidt(B_stroke));
 
@@ -215,6 +249,62 @@ int main()
 	{
 		H = add_column(H, B_stroke.col(i));
 	}
+
+	return H;
+}
+
+Eigen::MatrixXd HNF(Eigen::MatrixXd B)
+{
+	std::tuple<Eigen::MatrixXd, std::vector<int>> projection = get_linearly_independent_rows_by_gram_schmidt(B);
+	Eigen::MatrixXd B_stroke = std::get<0>(projection);
+	std::vector<int> inds = std::get<1>(projection);
+
+	Eigen::MatrixXd B_stroke_transposed = B_stroke.transpose();
+
+	Eigen::MatrixXd B_double_stroke = HNF_full_row_rank(B_stroke);
+
+	std::vector<Eigen::VectorXd> basis;
+	for (size_t i = 0; i < B_double_stroke.rows(); i++)
+	{
+		Eigen::VectorXd vec = B_double_stroke.row(i);
+		basis.push_back(vec);
+	}
+
+	for (size_t i = 0; i < B.rows(); i++)
+	{
+		if (std::find(inds.begin(), inds.end(), i) == inds.end())
+		{
+			Eigen::VectorXd vec = B.row(i);
+			Eigen::VectorXd x = B_stroke_transposed.colPivHouseholderQr().solve(vec);
+
+			Eigen::VectorXd result = Eigen::VectorXd::Zero(x.rows());
+			for (size_t j = 0; j < B_double_stroke.rows(); j++)
+			{
+				Eigen::VectorXd HNF_vec = B_double_stroke.row(j);
+				result += HNF_vec * x(j);
+			}
+			basis.push_back(result);
+		}
+	}
+	Eigen::MatrixXd result(basis.size(), basis[0].rows());
+	for (size_t i = 0; i < basis.size(); i++)
+	{
+		result.row(i) = basis[i];
+	}
+	return result;
+}
+
+int main()
+{
+	const int m = 5; // size of vector
+	const int n = 3; // number of vectors
+	const double lowest = 0;
+	const double highest = 5;
+
+	Eigen::MatrixXd B = generate_random_matrix(m, n, lowest, highest);
+
+	std::cout << B << "\n\n";
+	Eigen::MatrixXd H = HNF(B);
 	std::cout << H << "\n\n";
 
 	return 0;
