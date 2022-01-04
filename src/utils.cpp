@@ -185,4 +185,48 @@ namespace Utils
 
         return std::make_tuple(gcd, x, y);
     }
+
+    bool check_linear_independency(Eigen::MatrixXd matrix)
+    {
+        std::vector<int> inds = std::get<1>(get_linearly_independent_rows_by_gram_schmidt(matrix));
+
+        if (inds.size() != matrix.rows())
+        {
+            return false;
+        }
+        return true;
+    }
+
+    Eigen::MatrixXd generate_random_matrix_with_linearly_independent_rows(const int m, const int n, double lowest, double highest)
+    {
+        if (m > n)
+        {
+            throw "Number of vectors should be less than their size";
+        }
+
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_real_distribution<double> dis(lowest, highest);
+
+        Eigen::MatrixXd matrix = Eigen::MatrixXd::NullaryExpr(m, n, [&]()
+                                                              { return double(int(dis(gen))); });
+        while (!check_linear_independency(matrix))
+        {
+            matrix = Eigen::MatrixXd::NullaryExpr(m, n, [&]()
+                                                  { return double(int(dis(gen))); });
+        }
+        return matrix;
+    }
+
+    Eigen::ArrayXd generate_random_array(const int m, double lowest, double highest)
+    {
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_real_distribution<double> dis(lowest, highest);
+
+        Eigen::ArrayXd array = Eigen::ArrayXd::NullaryExpr(m, [&]()
+                                                           { return double(int(dis(gen))); });
+
+        return array;
+    }
 }

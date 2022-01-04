@@ -1,5 +1,5 @@
 from HNF import HNF, HNF_full_row_rank
-from CVP import greedy, branch_and_bound
+from CVP import greedy, branch_and_bound, projection
 from wolfram import get_HNF_from_wolfram_alpha
 import numpy as np
 from utils import generate_random_array, generate_random_linearly_independent_float_matrix, generate_random_linearly_independent_matrix, generate_random_matrix, generate_random_matrix_with_full_row_rank, generate_random_float_matrix, print_matrix
@@ -180,8 +180,8 @@ def main():
     # union_of_lattices_problem_HNF()
     # containtment_problem_HNF()
     # membership_problem_HNF()
-    HNF_problem()
-    # CVP_problem()
+    # HNF_problem()
+    CVP_problem()
 
 
 if __name__ == '__main__':

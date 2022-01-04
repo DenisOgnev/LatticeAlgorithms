@@ -14,6 +14,9 @@ namespace Utils
     std::tuple<Eigen::MatrixXd, std::vector<int>> get_linearly_independent_rows_by_gram_schmidt(Eigen::MatrixXd matrix);
     double det_by_gram_schmidt(Eigen::MatrixXd matrix);
     std::tuple<int, int, int> gcd_extended(int a, int b);
+    bool check_linear_independency(Eigen::MatrixXd matrix);
+    Eigen::MatrixXd generate_random_matrix_with_linearly_independent_rows(const int m, const int n, double lowest, double highest);
+    Eigen::ArrayXd generate_random_array(const int m, double lowest, double highest);
 }
 
 #endif
