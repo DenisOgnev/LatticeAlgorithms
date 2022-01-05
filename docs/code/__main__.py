@@ -90,15 +90,15 @@ def CVP_problem():
     print("Result of greedy: {}".format(greedy(B, t)))
     print("Result of b&b: {}".format(branch_and_bound(B, t)))
 
-    B = generate_random_linearly_independent_float_matrix(
-        n, m, lowest, highest)
-    print("B = \n{}".format(B))
+    # B = generate_random_linearly_independent_float_matrix(
+    #     n, m, lowest, highest)
+    # print("B = \n{}".format(B))
 
-    t = generate_random_array(m, arr_lowest, arr_highest)
-    print("t = {}".format(t))
+    # t = generate_random_array(m, arr_lowest, arr_highest)
+    # print("t = {}".format(t))
 
-    print("Result of greedy: {}".format(greedy(B, t)))
-    print("Result of b&b: {}".format(branch_and_bound(B, t)))
+    # print("Result of greedy: {}".format(greedy(B, t)))
+    # print("Result of b&b: {}".format(branch_and_bound(B, t)))
 
 
 def main_problem_HNF():

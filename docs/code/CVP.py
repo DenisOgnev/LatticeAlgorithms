@@ -14,6 +14,8 @@ def projection(matrix, vector):
 
 
 def closest_vector(matrix, vector):
+    if (matrix.shape[0] == 0):
+        return vector
     closest = matrix[0]
     for v in matrix:
         if (distance_between_two_vectors(vector, v) < distance_between_two_vectors(vector, closest)):
@@ -44,12 +46,12 @@ def branch_and_bound(matrix, target):
     b_star = projection(matrix, b)
 
     upper_bound = math.ceil(norm(target - v))
-    x_array = np.array([2, 3])
+    #x_array = np.array([2, 3])
+    x_array = []
     v_array = []
 
     x_middle = math.floor(scalar(target, b_star) / scalar(b_star, b_star))
     lower_bound = norm(projection(matrix, target - x_middle * b))
-
     x = x_middle
     temp_lower_bound = lower_bound
     while (temp_lower_bound <= upper_bound):

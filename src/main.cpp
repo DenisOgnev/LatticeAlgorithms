@@ -36,6 +36,75 @@ Eigen::VectorXd greedy(Eigen::MatrixXd matrix, Eigen::VectorXd target)
 	return c * b + greedy(mat, target - c * b);
 }
 
+double distance_between_two_vectors(Eigen::VectorXd vector1, Eigen::VectorXd vector2)
+{
+	return (vector1 - vector2).norm();
+}
+
+Eigen::VectorXd closest_vector(std::vector<Eigen::VectorXd> matrix, Eigen::VectorXd vector)
+{
+	if (matrix.size() == 0)
+	{
+		return vector;
+	}
+	Eigen::VectorXd closest = matrix[0];
+	for (auto const &v : matrix)
+	{
+		if (distance_between_two_vectors(vector, v) <= distance_between_two_vectors(vector, closest))
+		{
+			closest = v;
+		}
+	}
+	return closest;
+}
+
+Eigen::VectorXd branch_and_bound(Eigen::MatrixXd matrix, Eigen::VectorXd target)
+{
+	if (matrix.rows() == 0)
+	{
+		return Eigen::VectorXd::Zero(matrix.cols());
+	}
+	Eigen::VectorXd b = matrix.row(matrix.rows() - 1);
+	Eigen::MatrixXd mat = matrix.block(0, 0, matrix.rows() - 1, matrix.cols());
+	Eigen::VectorXd b_star = projection(mat, b);
+	Eigen::VectorXd v = greedy(mat, target);
+
+	double upper_bound = std::ceil((target - v).norm());
+	double x_middle = std::floor(target.dot(b_star) / b_star.dot(b_star));
+	double lower_bound = projection(mat, target - x_middle * b).norm();
+
+	double x = x_middle;
+	double temp_lower_bound = lower_bound;
+	while (temp_lower_bound <= upper_bound)
+	{
+		x += 1;
+		temp_lower_bound = projection(mat, target - x * b).norm();
+	}
+	double x_highest = x;
+
+	x = x_middle;
+	temp_lower_bound = lower_bound;
+	while (temp_lower_bound <= upper_bound)
+	{
+		x -= 1;
+		temp_lower_bound = projection(mat, target - x * b).norm();
+	}
+	double x_lowest = x + 1;
+
+	std::vector<int> x_array;
+	for (size_t i = x_lowest; i <= x_highest; i++)
+	{
+		x_array.push_back(i);
+	}
+	std::vector<Eigen::VectorXd> v_array;
+	for (auto const &elem : x_array)
+	{
+		Eigen::VectorXd res = elem * b + branch_and_bound(mat, target - elem * b);
+		v_array.push_back(res);
+	}
+	return closest_vector(v_array, target);
+}
+
 int main()
 {
 	// const int m = 3; // size of vector
@@ -61,7 +130,7 @@ int main()
 	Eigen::VectorXd t = Utils::generate_random_array(n, arr_lowest, arr_highest);
 	std::cout << t << "\n\n";
 
-	Eigen::VectorXd res = greedy(B, t);
+	Eigen::VectorXd res = branch_and_bound(B, t);
 	std::cout << res << "\n\n";
 
 	return 0;
