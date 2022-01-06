@@ -40,8 +40,8 @@ def HNF_problem():
     # print("HNF(B).T = \n{}\n".format(H.T))
     # print("HNF(B) from wolfram alpha = \n{}".format(H_str))
 
-    m = 5  # size of vector
-    n = 3  # number of vectors
+    m = 3  # size of vector
+    n = 5  # number of vectors
     lowest = 0
     highest = 6
 
@@ -180,8 +180,8 @@ def main():
     # union_of_lattices_problem_HNF()
     # containtment_problem_HNF()
     # membership_problem_HNF()
-    # HNF_problem()
-    CVP_problem()
+    HNF_problem()
+    # CVP_problem()
 
 
 if __name__ == '__main__':

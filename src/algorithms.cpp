@@ -15,14 +15,23 @@ namespace Algorithms
 
             double det = round(Utils::det_by_gram_schmidt(B_stroke));
 
-            Eigen::MatrixXd H = Eigen::MatrixXd::Identity(m, m) * det;
+            Eigen::MatrixXd H_temp = Eigen::MatrixXd::Identity(m, m) * det;
 
             for (size_t i = 0; i < n; i++)
             {
-                H = Utils::add_column(H, B_stroke.col(i));
+                H_temp = Utils::add_column(H_temp, B.col(i));
             }
 
-            return H;
+            if (n > m)
+            {
+                Eigen::MatrixXd H(m, n);
+                H.block(0, 0, H_temp.rows(), H_temp.cols()) = H_temp;
+                H.block(0, H_temp.cols(), H_temp.rows(), n - m) = Eigen::MatrixXd::Zero(H_temp.rows(), n - m);
+
+                return H;
+            }
+
+            return H_temp;
         }
 
         Eigen::MatrixXd HNF(Eigen::MatrixXd B)
