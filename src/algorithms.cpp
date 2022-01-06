@@ -7,7 +7,7 @@ namespace Algorithms
 {
     namespace HNF
     {
-        Eigen::MatrixXd HNF_full_row_rank(Eigen::MatrixXd B)
+        Eigen::MatrixXd HNF_full_row_rank(const Eigen::MatrixXd &B)
         {
             int m = B.rows();
             int n = B.cols();
@@ -34,7 +34,7 @@ namespace Algorithms
             return H_temp;
         }
 
-        Eigen::MatrixXd HNF(Eigen::MatrixXd B)
+        Eigen::MatrixXd HNF(const Eigen::MatrixXd &B)
         {
             std::tuple<Eigen::MatrixXd, std::vector<int>> projection = Utils::get_linearly_independent_rows_by_gram_schmidt(B);
             Eigen::MatrixXd B_stroke = std::get<0>(projection);
@@ -45,27 +45,28 @@ namespace Algorithms
             Eigen::MatrixXd B_double_stroke = HNF_full_row_rank(B_stroke);
 
             std::vector<Eigen::VectorXd> basis;
-            for (size_t i = 0; i < B_double_stroke.rows(); i++)
+            for (const Eigen::VectorXd &vec : B_double_stroke.rowwise())
             {
-                Eigen::VectorXd vec = B_double_stroke.row(i);
                 basis.push_back(vec);
             }
 
-            for (size_t i = 0; i < B.rows(); i++)
+            int counter = 0;
+            for (const Eigen::VectorXd &vec : B.rowwise())
             {
-                if (std::find(inds.begin(), inds.end(), i) == inds.end())
+                if (std::find(inds.begin(), inds.end(), counter) == inds.end())
                 {
-                    Eigen::VectorXd vec = B.row(i);
                     Eigen::VectorXd x = B_stroke_transposed.colPivHouseholderQr().solve(vec);
 
                     Eigen::VectorXd result = Eigen::VectorXd::Zero(x.rows());
-                    for (size_t j = 0; j < B_double_stroke.rows(); j++)
+                    int second_counter = 0;
+                    for (const Eigen::VectorXd &HNF_vec : B_double_stroke.rowwise())
                     {
-                        Eigen::VectorXd HNF_vec = B_double_stroke.row(j);
-                        result += HNF_vec * x(j);
+                        result += HNF_vec * x(second_counter);
+                        second_counter++;
                     }
                     basis.push_back(result);
                 }
+                counter++;
             }
             Eigen::MatrixXd result(basis.size(), basis[0].rows());
             for (size_t i = 0; i < basis.size(); i++)
@@ -139,7 +140,7 @@ namespace Algorithms
             return Utils::closest_vector(v_array, target);
         }
     }
-    Eigen::MatrixXd gram_schmidt(Eigen::MatrixXd matrix, bool normalize, bool delete_zero_rows)
+    Eigen::MatrixXd gram_schmidt(const Eigen::MatrixXd &matrix, bool normalize, bool delete_zero_rows)
     {
         std::vector<Eigen::VectorXd> basis;
         Eigen::MatrixXd result(matrix.rows(), matrix.rows());

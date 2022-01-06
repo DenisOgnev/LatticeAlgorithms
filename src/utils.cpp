@@ -5,7 +5,7 @@
 
 namespace Utils
 {
-    Eigen::MatrixXd add_column(Eigen::MatrixXd H, Eigen::ArrayXd b_column)
+    Eigen::MatrixXd add_column(const Eigen::MatrixXd &H, const Eigen::ArrayXd &b_column)
     {
         if (H.cols() == 0)
         {
@@ -21,7 +21,7 @@ namespace Utils
         double g = static_cast<double>(std::get<0>(gcd_result));
         double x = static_cast<double>(std::get<1>(gcd_result));
         double y = static_cast<double>(std::get<2>(gcd_result));
-        Eigen::MatrixXd U(2, 2);
+        Eigen::Matrix2d U;
         U << x, -b / g, y, a / g;
         Eigen::MatrixXd temp_matrix(H.rows(), 2);
         temp_matrix.col(0) = Eigen::ArrayXd(H.col(0));
@@ -37,32 +37,31 @@ namespace Utils
 
         h_stroke = reduce(h_stroke, H_double_stroke);
 
-        int length_of_zeros = H_double_stroke.rows();
-
         Eigen::MatrixXd result(H.rows(), H.cols());
         result(0, 0) = g;
         result.block(1, 0, h_stroke.rows(), 1) = h_stroke;
-        result.block(0, 1, 1, length_of_zeros).setZero();
+        result.block(0, 1, 1, H_double_stroke.rows()).setZero();
         result.block(1, 1, H_double_stroke.rows(), H_double_stroke.cols()) = H_double_stroke;
 
         return result;
     }
 
-    Eigen::ArrayXd reduce(Eigen::ArrayXd vector, Eigen::MatrixXd matrix)
+    Eigen::ArrayXd reduce(const Eigen::ArrayXd &vector, const Eigen::MatrixXd &matrix)
     {
-        for (size_t i = 0; i < vector.rows(); i++)
+        Eigen::ArrayXd result = vector;
+        for (size_t i = 0; i < result.rows(); i++)
         {
             Eigen::ArrayXd matrix_column = matrix.col(i);
-            while (vector(i) < 0)
+            while (result(i) < 0)
             {
-                vector += matrix_column;
+                result += matrix_column;
             }
-            while (vector(i) >= matrix(i, i))
+            while (result(i) >= matrix(i, i))
             {
-                vector -= matrix_column;
+                result -= matrix_column;
             }
         }
-        return vector;
+        return result;
     }
 
     Eigen::MatrixXd generate_random_matrix_with_full_row_rank(const int m, const int n, double lowest, double highest)
@@ -101,14 +100,15 @@ namespace Utils
         return matrix;
     }
 
-    Eigen::MatrixXd get_linearly_independent_columns_by_gram_schmidt(Eigen::MatrixXd matrix)
+    Eigen::MatrixXd get_linearly_independent_columns_by_gram_schmidt(const Eigen::MatrixXd &matrix)
     {
         std::vector<Eigen::VectorXd> basis;
         std::vector<int> indexes;
         Eigen::MatrixXd result(matrix.rows(), matrix.rows());
-        for (int i = 0; i < matrix.cols(); i++)
+
+        int counter = 0;
+        for (const Eigen::VectorXd &vec : matrix.colwise())
         {
-            Eigen::VectorXd vec = matrix.col(i);
             Eigen::VectorXd projections = Eigen::VectorXd::Zero(vec.size());
             for (const auto &b : basis)
             {
@@ -119,8 +119,9 @@ namespace Utils
             if (!is_all_zero)
             {
                 basis.push_back(result);
-                indexes.push_back(i);
+                indexes.push_back(counter);
             }
+            counter++;
         }
 
         for (size_t i = 0; i < indexes.size(); i++)
@@ -130,13 +131,14 @@ namespace Utils
         return result;
     }
 
-    std::tuple<Eigen::MatrixXd, std::vector<int>> get_linearly_independent_rows_by_gram_schmidt(Eigen::MatrixXd matrix)
+    std::tuple<Eigen::MatrixXd, std::vector<int>> get_linearly_independent_rows_by_gram_schmidt(const Eigen::MatrixXd &matrix)
     {
         std::vector<Eigen::VectorXd> basis;
         std::vector<int> indexes;
-        for (int i = 0; i < matrix.rows(); i++)
+
+        int counter = 0;
+        for (const Eigen::VectorXd &vec : matrix.rowwise())
         {
-            Eigen::VectorXd vec = matrix.row(i);
             Eigen::VectorXd projections = Eigen::VectorXd::Zero(vec.size());
             for (const auto &b : basis)
             {
@@ -147,9 +149,11 @@ namespace Utils
             if (!is_all_zero)
             {
                 basis.push_back(result);
-                indexes.push_back(i);
+                indexes.push_back(counter);
             }
+            counter++;
         }
+
         Eigen::MatrixXd result(basis.size(), matrix.cols());
         for (size_t i = 0; i < indexes.size(); i++)
         {
@@ -158,7 +162,7 @@ namespace Utils
         return std::make_tuple(result, indexes);
     }
 
-    double det_by_gram_schmidt(Eigen::MatrixXd matrix)
+    double det_by_gram_schmidt(const Eigen::MatrixXd &matrix)
     {
         double result = 1.0;
         Eigen::MatrixXd gs = Algorithms::gram_schmidt(matrix);
