@@ -229,4 +229,40 @@ namespace Utils
 
         return array;
     }
+
+    Eigen::VectorXd projection(Eigen::MatrixXd matrix, Eigen::VectorXd vector)
+    {
+        Eigen::VectorXd projection = Eigen::VectorXd::Zero(vector.rows());
+
+        for (size_t i = 0; i < matrix.rows(); i++)
+        {
+            Eigen::VectorXd matrix_row = matrix.row(i);
+            projection += (vector.dot(matrix_row) / matrix_row.dot(matrix_row)) * matrix_row;
+        }
+        Eigen::VectorXd result = vector - projection;
+
+        return result;
+    }
+
+    double distance_between_two_vectors(Eigen::VectorXd vector1, Eigen::VectorXd vector2)
+    {
+        return (vector1 - vector2).norm();
+    }
+
+    Eigen::VectorXd closest_vector(std::vector<Eigen::VectorXd> matrix, Eigen::VectorXd vector)
+    {
+        if (matrix.size() == 0)
+        {
+            return vector;
+        }
+        Eigen::VectorXd closest = matrix[0];
+        for (auto const &v : matrix)
+        {
+            if (distance_between_two_vectors(vector, v) <= distance_between_two_vectors(vector, closest))
+            {
+                closest = v;
+            }
+        }
+        return closest;
+    }
 }
