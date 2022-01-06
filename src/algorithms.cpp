@@ -78,7 +78,7 @@ namespace Algorithms
     }
     namespace CVP
     {
-        Eigen::VectorXd greedy(Eigen::MatrixXd matrix, Eigen::VectorXd target)
+        Eigen::VectorXd greedy(const Eigen::MatrixXd &matrix, const Eigen::VectorXd &target)
         {
             if (matrix.rows() == 0)
             {
@@ -93,7 +93,7 @@ namespace Algorithms
             return c * b + Algorithms::CVP::greedy(mat, target - c * b);
         }
 
-        Eigen::VectorXd branch_and_bound(Eigen::MatrixXd matrix, Eigen::VectorXd target)
+        Eigen::VectorXd branch_and_bound(const Eigen::MatrixXd &matrix, const Eigen::VectorXd &target)
         {
             if (matrix.rows() == 0)
             {
@@ -127,9 +127,13 @@ namespace Algorithms
             double x_lowest = x + 1;
 
             std::vector<int> x_array;
-            for (size_t i = x_lowest; i <= x_highest; i++)
+            for (size_t i = x_lowest; i < x_highest; i++)
             {
                 x_array.push_back(i);
+            }
+            if (x_array.size() == 0)
+            {
+                x_array.push_back(x_middle);
             }
             std::vector<Eigen::VectorXd> v_array;
             for (auto const &elem : x_array)

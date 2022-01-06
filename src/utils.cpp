@@ -190,7 +190,7 @@ namespace Utils
         return std::make_tuple(gcd, x, y);
     }
 
-    bool check_linear_independency(Eigen::MatrixXd matrix)
+    bool check_linear_independency(const Eigen::MatrixXd &matrix)
     {
         std::vector<int> inds = std::get<1>(get_linearly_independent_rows_by_gram_schmidt(matrix));
 
@@ -234,31 +234,27 @@ namespace Utils
         return array;
     }
 
-    Eigen::VectorXd projection(Eigen::MatrixXd matrix, Eigen::VectorXd vector)
+    Eigen::VectorXd projection(const Eigen::MatrixXd &matrix, const Eigen::VectorXd &vector)
     {
         Eigen::VectorXd projection = Eigen::VectorXd::Zero(vector.rows());
 
-        for (size_t i = 0; i < matrix.rows(); i++)
+        for (const Eigen::VectorXd &matrix_row : matrix.rowwise())
         {
-            Eigen::VectorXd matrix_row = matrix.row(i);
             projection += (vector.dot(matrix_row) / matrix_row.dot(matrix_row)) * matrix_row;
         }
+
         Eigen::VectorXd result = vector - projection;
 
         return result;
     }
 
-    double distance_between_two_vectors(Eigen::VectorXd vector1, Eigen::VectorXd vector2)
+    double distance_between_two_vectors(const Eigen::VectorXd &vector1, const Eigen::VectorXd &vector2)
     {
         return (vector1 - vector2).norm();
     }
 
-    Eigen::VectorXd closest_vector(std::vector<Eigen::VectorXd> matrix, Eigen::VectorXd vector)
+    Eigen::VectorXd closest_vector(const std::vector<Eigen::VectorXd> &matrix, const Eigen::VectorXd &vector)
     {
-        if (matrix.size() == 0)
-        {
-            return vector;
-        }
         Eigen::VectorXd closest = matrix[0];
         for (auto const &v : matrix)
         {

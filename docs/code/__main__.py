@@ -61,7 +61,7 @@ def CVP_problem():
     m = 2  # vector size
     n = 2  # number of vectors
     lowest = 0
-    highest = 3
+    highest = 5
 
     arr_lowest = 0
     arr_highest = 5
@@ -180,8 +180,8 @@ def main():
     # union_of_lattices_problem_HNF()
     # containtment_problem_HNF()
     # membership_problem_HNF()
-    HNF_problem()
-    # CVP_problem()
+    # HNF_problem()
+    CVP_problem()
 
 
 if __name__ == '__main__':
