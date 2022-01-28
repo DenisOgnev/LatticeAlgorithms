@@ -1,7 +1,9 @@
+from turtle import st
 from HNF import HNF, HNF_full_row_rank
 from CVP import greedy, branch_and_bound, projection
 from wolfram import get_HNF_from_wolfram_alpha
 import numpy as np
+from datetime import datetime
 from utils import generate_random_array, generate_random_linearly_independent_float_matrix, generate_random_linearly_independent_matrix, generate_random_matrix, generate_random_matrix_with_full_row_rank, generate_random_float_matrix, print_matrix
 
 
@@ -58,13 +60,13 @@ def HNF_problem():
 
 def CVP_problem():
 
-    m = 2  # vector size
-    n = 2  # number of vectors
-    lowest = 0
-    highest = 5
+    m = 15  # vector size
+    n = 15  # number of vectors
+    lowest = 1
+    highest = 25
 
-    arr_lowest = 0
-    arr_highest = 5
+    arr_lowest = 1
+    arr_highest = 25
 
     # generate matrix with linear independent vectors
     # vectors of generated matrix B are vectors
@@ -82,13 +84,22 @@ def CVP_problem():
 
     B = generate_random_linearly_independent_matrix(
         n, m, lowest, highest)
-    print("B = \n{}".format(B))
+    #print("B = \n{}".format(B))
 
     t = generate_random_array(m, arr_lowest, arr_highest)
-    print("t = {}".format(t))
+    #print("t = {}".format(t))
 
-    print("Result of greedy: {}".format(greedy(B, t)))
-    print("Result of b&b: {}".format(branch_and_bound(B, t)))
+    #print("Result of greedy: {}".format(greedy(B, t)))
+    start = datetime.now()
+    res = greedy(B, t)
+    end = datetime.now()
+    print(end - start)
+    start = datetime.now()
+    res = branch_and_bound(B, t)
+    end = datetime.now()
+    print(end - start)
+
+    #print("Result of b&b: {}".format(branch_and_bound(B, t)))
 
     # B = generate_random_linearly_independent_float_matrix(
     #     n, m, lowest, highest)
@@ -102,19 +113,23 @@ def CVP_problem():
 
 
 def main_problem_HNF():
-    m = 5  # size of vector
-    n = 3  # number of vectors
-    lowest = 0
-    highest = 6
+    m = 20  # size of vector
+    n = 20  # number of vectors
+    lowest = 1
+    highest = 15
 
     B = generate_random_matrix(m, n, lowest, highest)
-    print("B = \n{}".format(B))
+    #print("B = \n{}".format(B))
 
+    start = datetime.now()
     H = HNF(B)
-    H_str = get_HNF_from_wolfram_alpha(B.T)
-    print("HNF(B) = \n{}".format(H))
-    print("HNF(B).T = \n{}".format(H.T))
-    print("HNF(B) from wolfram alpha = \n{}".format(H_str))
+    end = datetime.now()
+
+    print(end - start)
+    #H_str = get_HNF_from_wolfram_alpha(B.T)
+    #print("HNF(B) = \n{}".format(H))
+    #print("HNF(B).T = \n{}".format(H.T))
+    #print("HNF(B) from wolfram alpha = \n{}".format(H_str))
 
 
 def equality_problem_HNF():

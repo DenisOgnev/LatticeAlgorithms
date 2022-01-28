@@ -1,3 +1,4 @@
+from math import ceil, floor
 import numpy as np
 import sympy
 from sympy.matrices import matrices
@@ -151,10 +152,18 @@ def sign(a):
 
 def reduce(vector, matrix):
     for i in range(vector.shape[0]):
-        while(vector[i] < 0):
-            vector += matrix.T[i]
-        while(vector[i] >= matrix[i, i]):
-            vector -= matrix.T[i]
+        if (vector[i] < 0):
+            x = abs(ceil(vector[i] / matrix[i, i])) + 1
+            vector += matrix.T[i] * x
+        if (vector[i] >= matrix[i, i]):
+            x = floor(vector[i] / matrix[i, i])
+            vector -= matrix.T[i] * x
+
+
+        # while(vector[i] < 0):
+        #     vector += matrix.T[i]
+        # while(vector[i] >= matrix[i, i]):
+        #     vector -= matrix.T[i]
 
     return vector
 

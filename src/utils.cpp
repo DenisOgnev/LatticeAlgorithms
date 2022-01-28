@@ -52,14 +52,25 @@ namespace Utils
         for (size_t i = 0; i < result.rows(); i++)
         {
             Eigen::ArrayXd matrix_column = matrix.col(i);
-            while (result(i) < 0)
+            if (result(i) < 0)
             {
-                result += matrix_column;
+                double x = abs(ceil(result(i) / matrix(i, i))) + 1;
+                result += matrix_column * x;
             }
-            while (result(i) >= matrix(i, i))
+            if (result(i) >= matrix(i, i))
             {
-                result -= matrix_column;
+                double x = floor(result(i) / matrix(i, i));
+                result -= matrix_column * x;
             }
+            // while (result(i) < 0)
+            // {
+            //     result += matrix_column;
+            // }
+            // while (result(i) >= matrix(i, i))
+            // {
+            //     result -= matrix_column;
+            // }
+
         }
         return result;
     }
@@ -229,7 +240,7 @@ namespace Utils
         std::uniform_real_distribution<double> dis(lowest, highest);
 
         Eigen::ArrayXd array = Eigen::ArrayXd::NullaryExpr(m, [&]()
-                                                           { return double(int(dis(gen))); });
+                                                           { return dis(gen); });
 
         return array;
     }
