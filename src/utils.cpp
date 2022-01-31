@@ -62,14 +62,6 @@ namespace Utils
                 double x = floor(result(i) / matrix(i, i));
                 result -= matrix_column * x;
             }
-            // while (result(i) < 0)
-            // {
-            //     result += matrix_column;
-            // }
-            // while (result(i) >= matrix(i, i))
-            // {
-            //     result -= matrix_column;
-            // }
 
         }
         return result;
