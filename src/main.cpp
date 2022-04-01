@@ -1,12 +1,9 @@
-#include <CL/cl.h>
 #include <iostream>
 #include <omp.h>
-#include "SFML/Graphics.hpp"
 #include "utils.hpp"
 #include "algorithms.hpp"
 #include <Eigen/Dense>
 #include <random>
-#include "problems.hpp"
 
 int main()
 {
