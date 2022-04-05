@@ -9,7 +9,6 @@
 std::map<std::string, int> action_mapping;
 
 void compute_HNF();
-
 int main()
 {
     bool flag = true;
@@ -49,22 +48,17 @@ int main()
 	return 0;
 }
 
-void HNF_particular_matrix()
-{
-    std::cout << "\n";
-}
+void HNF_particular_matrix();
 void compute_HNF()
 {
     bool flag = true;
-
-
-    std::cout << "Select an action (write only a number):\n";
-    std::cout << "1. Compute HNF of a particular matrix\n";
-    std::cout << "2. Compute HNF of a random matrix\n";
-    std::cout << "3. Speed test\n";
-    std::cout << "4. Menu\n";
     while (flag)
     {    
+        std::cout << "Select an action (write only a number):\n";
+        std::cout << "1. Compute HNF of a particular matrix\n";
+        std::cout << "2. Compute HNF of a random matrix\n";
+        std::cout << "3. Speed test\n";
+        std::cout << "4. Menu\n";
         std::string action;
         std::cin >> action;
         switch (action_mapping[action])
@@ -82,6 +76,18 @@ void compute_HNF()
             std::cout << "Wrong selection\n\n";
             break;
         }
+    }
+}
+
+void HNF_particular_matrix()
+{
+    bool flag = true;
+    while (flag)
+    {    
+        std::cout << "Write your matrix row by row like: {{a, b}, {c, d}}\n";
+        std::string matrix_str;
+        std::cin >> matrix_str;
+        
     }
 }
 
