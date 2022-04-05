@@ -49,7 +49,7 @@ namespace Utils
     Eigen::ArrayXd reduce(const Eigen::ArrayXd &vector, const Eigen::MatrixXd &matrix)
     {
         Eigen::ArrayXd result = vector;
-        for (size_t i = 0; i < result.rows(); i++)
+        for (int i = 0; i < result.rows(); i++)
         {
             Eigen::ArrayXd matrix_column = matrix.col(i);
             if (result(i) < 0)
@@ -127,7 +127,7 @@ namespace Utils
             counter++;
         }
 
-        for (size_t i = 0; i < indexes.size(); i++)
+        for (int i = 0; i < indexes.size(); i++)
         {
             result.col(i) = matrix.col(indexes[i]);
         }
@@ -158,7 +158,7 @@ namespace Utils
         }
 
         Eigen::MatrixXd result(basis.size(), matrix.cols());
-        for (size_t i = 0; i < indexes.size(); i++)
+        for (int i = 0; i < indexes.size(); i++)
         {
             result.row(i) = matrix.row(indexes[i]);
         }

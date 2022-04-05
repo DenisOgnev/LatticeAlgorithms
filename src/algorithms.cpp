@@ -9,15 +9,15 @@ namespace Algorithms
     {
         Eigen::MatrixXd HNF_full_row_rank(const Eigen::MatrixXd &B)
         {
-            int m = B.rows();
-            int n = B.cols();
+            int m = static_cast<int>(B.rows());
+            int n = static_cast<int>(B.cols());
             Eigen::MatrixXd B_stroke = Utils::get_linearly_independent_columns_by_gram_schmidt(B);
 
             double det = round(Utils::det_by_gram_schmidt(B_stroke));
 
             Eigen::MatrixXd H_temp = Eigen::MatrixXd::Identity(m, m) * det;
 
-            for (size_t i = 0; i < n; i++)
+            for (int i = 0; i < n; i++)
             {
                 H_temp = Utils::add_column(H_temp, B.col(i));
             }
@@ -69,7 +69,7 @@ namespace Algorithms
                 counter++;
             }
             Eigen::MatrixXd result(basis.size(), basis[0].rows());
-            for (size_t i = 0; i < basis.size(); i++)
+            for (int i = 0; i < basis.size(); i++)
             {
                 result.row(i) = basis[i];
             }
@@ -127,13 +127,13 @@ namespace Algorithms
             double x_lowest = x + 1;
 
             std::vector<int> x_array;
-            for (size_t i = x_lowest; i < x_highest; i++)
+            for (int i =  static_cast<int>(x_lowest); i < x_highest; i++)
             {
                 x_array.push_back(i);
             }
             if (x_array.size() == 0)
             {
-                x_array.push_back(x_middle);
+                x_array.push_back(static_cast<int>(x_middle));
             }
             std::vector<Eigen::VectorXd> v_array;
             for (auto const &elem : x_array)
@@ -184,7 +184,7 @@ namespace Algorithms
                 }
             }
         }
-        for (size_t i = 0; i < basis.size(); i++)
+        for (int i = 0; i < basis.size(); i++)
         {
             result.col(i) = basis[i];
         }
