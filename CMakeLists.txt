@@ -1,26 +1,26 @@
 cmake_minimum_required(VERSION 3.0)
 project(LatticeAlgorithms)
 
-add_library(${PROJECT_NAME} src/algorithms.cpp)
+# add_library(${PROJECT_NAME} src/algorithms.cpp)
 
-target_include_directories(${PROJECT_NAME}
-     PUBLIC include
-)
-
-
-# file(GLOB SRC
-#      "src/*.cpp"
+# target_include_directories(${PROJECT_NAME}
+#      PUBLIC include
 # )
 
-# #set(BUILD_SHARED_LIBS FALSE)
-# #add_subdirectory(3rdparty/SFML)
 
-# #find_package(OpenCL REQUIRED)
-# #find_package(OpenMP REQUIRED)
-# #include_directories(${OpenCL_INCLUDE_DIRS})
-# include_directories(include)
+file(GLOB SRC
+     "src/*.cpp"
+)
 
-# add_executable(main ${SRC})
+#set(BUILD_SHARED_LIBS FALSE)
+#add_subdirectory(3rdparty/SFML)
+
+#find_package(OpenCL REQUIRED)
+#find_package(OpenMP REQUIRED)
+#include_directories(${OpenCL_INCLUDE_DIRS})
+include_directories(include)
+
+add_executable(main ${SRC})
 
 #target_link_libraries(main ${OpenCL_LIBRARIES})
 #target_link_libraries(main OpenMP::OpenMP_CXX)
