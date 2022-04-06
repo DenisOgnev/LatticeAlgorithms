@@ -2,18 +2,41 @@
 #include <iostream>
 #include "utils.hpp"
 #include <vector>
+#include <numeric>
 
 namespace Algorithms
 {
     namespace HNF
     {
+        // Computes HNF of matrix that is full row rank
+        // @return Eigen::MatrixXd
+        // @param B full row rank matrix
         Eigen::MatrixXd HNF_full_row_rank(const Eigen::MatrixXd &B)
         {
             int m = static_cast<int>(B.rows());
             int n = static_cast<int>(B.cols());
-            Eigen::MatrixXd B_stroke = Utils::get_linearly_independent_columns_by_gram_schmidt(B);
 
-            double det = round(Utils::det_by_gram_schmidt(B_stroke));
+            if (m > n)
+            {
+                throw std::invalid_argument("m must be less than or equal n");
+            }
+            if (m < 1 || n < 1)
+            {
+                throw std::invalid_argument("Matrix is not initialized");
+            }
+            if (B.isZero(1e-3))
+            {
+                throw std::exception("Matrix is empty");
+            }
+
+            std::tuple<Eigen::MatrixXd, Eigen::MatrixXd, std::vector<int>> result_of_gs = Utils::get_linearly_independent_columns_by_gram_schmidt(B);
+            Eigen::MatrixXd B_stroke = std::get<0>(result_of_gs);
+            Eigen::MatrixXd ortogonalized = std::get<1>(result_of_gs);
+            double det = 1.0;
+            for (const auto &vec : ortogonalized.colwise())
+            {
+                det *= vec.norm();
+            }
 
             Eigen::MatrixXd H_temp = Eigen::MatrixXd::Identity(m, m) * det;
 
@@ -22,16 +45,14 @@ namespace Algorithms
                 H_temp = Utils::add_column(H_temp, B.col(i));
             }
 
+            Eigen::MatrixXd H(m, n);
+            H.block(0, 0, H_temp.rows(), H_temp.cols()) = H_temp;
             if (n > m)
             {
-                Eigen::MatrixXd H(m, n);
-                H.block(0, 0, H_temp.rows(), H_temp.cols()) = H_temp;
                 H.block(0, H_temp.cols(), H_temp.rows(), n - m) = Eigen::MatrixXd::Zero(H_temp.rows(), n - m);
-
-                return H;
             }
 
-            return H_temp;
+            return H;
         }
 
         Eigen::MatrixXd HNF(const Eigen::MatrixXd &B)
@@ -144,46 +165,52 @@ namespace Algorithms
             return Utils::closest_vector(v_array, target);
         }
     }
-    Eigen::MatrixXd gram_schmidt(const Eigen::MatrixXd &matrix, bool normalize, bool delete_zero_rows)
+    // Computes Gram Schmidt orthogonalization
+    // @return Eigen::MatrixXd
+    // @param matrix input matrix
+    // @param normalize indicates that should we or not normalize output values
+    // @param delete_zero_rows indicates that should we or not delete zero rows
+    Eigen::MatrixXd gram_schmidt(const Eigen::MatrixXd &matrix, bool delete_zero_rows)
     {
         std::vector<Eigen::VectorXd> basis;
-        Eigen::MatrixXd result(matrix.rows(), matrix.rows());
 
         for (const auto &vec : matrix.colwise())
         {
             Eigen::VectorXd projections = Eigen::VectorXd::Zero(vec.size());
-            for (const auto &b : basis)
+
+            //#pragma omp parallel for
+            for (int i = 0; i < basis.size(); i++)
             {
-                projections += (vec.dot(b) / b.dot(b)) * b;
+                double inner1 = std::inner_product(vec.data(), vec.data() + vec.size(), basis[i].data(), 0.0);
+                double inner2 = std::inner_product(basis[i].data(), basis[i].data() + basis[i].size(), basis[i].data(), 0.0);
+                projections.noalias() += (inner1 / inner2) * basis[i];
             }
+            // NO PARALLEL
+            // for (const auto &b : basis)
+            // {
+            //     double inner1 = std::inner_product(vec.data(), vec.data() + vec.size(), b.data(), 0.0);
+            //     double inner2 = std::inner_product(b.data(), b.data() + b.size(), b.data(), 0.0);
+            //     projections.noalias() += (inner1 / inner2) * b;
+            // }
+
             Eigen::VectorXd result = vec - projections;
+
             if (delete_zero_rows)
             {
                 bool is_all_zero = result.isZero(1e-3);
                 if (!is_all_zero)
                 {
-                    if (normalize)
-                    {
-                        basis.push_back(result / result.norm());
-                    }
-                    else
-                    {
-                        basis.push_back(result);
-                    }
+                    basis.push_back(result);
                 }
             }
             else
             {
-                if (normalize)
-                {
-                    basis.push_back(result / result.norm());
-                }
-                else
-                {
-                    basis.push_back(result);
-                }
+                basis.push_back(result);
             }
         }
+
+        Eigen::MatrixXd result(matrix.rows(), basis.size());
+        #pragma omp parallel for
         for (int i = 0; i < basis.size(); i++)
         {
             result.col(i) = basis[i];
