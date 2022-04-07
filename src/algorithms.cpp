@@ -9,9 +9,9 @@ namespace Algorithms
     namespace HNF
     {
         // Computes HNF of a matrix that is full row rank
-        // @return Eigen::MatrixXd
+        // @return Eigen::MatrixXi
         // @param B full row rank matrix
-        Eigen::MatrixXd HNF_full_row_rank(const Eigen::MatrixXd &B)
+        Eigen::MatrixXi HNF_full_row_rank(const Eigen::MatrixXi &B)
         {
             int m = static_cast<int>(B.rows());
             int n = static_cast<int>(B.cols());
@@ -29,8 +29,8 @@ namespace Algorithms
                 throw std::exception("Matrix is empty");
             }
 
-            std::tuple<Eigen::MatrixXd, Eigen::MatrixXd, std::vector<int>> result_of_gs = Utils::get_linearly_independent_columns_by_gram_schmidt(B);
-            Eigen::MatrixXd B_stroke = std::get<0>(result_of_gs);
+            std::tuple<Eigen::MatrixXi, Eigen::MatrixXd, std::vector<int>> result_of_gs = Utils::get_linearly_independent_columns_by_gram_schmidt(B);
+            Eigen::MatrixXi B_stroke = std::get<0>(result_of_gs);
             Eigen::MatrixXd ortogonalized = std::get<1>(result_of_gs);
             
             double det = 1.0;
@@ -38,19 +38,20 @@ namespace Algorithms
             {
                 det *= vec.norm();
             }
+            det = std::round(det); // to avoid errors with static_cast
 
-            Eigen::MatrixXd H_temp = Eigen::MatrixXd::Identity(m, m) * det;
+            Eigen::MatrixXi H_temp = Eigen::MatrixXi::Identity(m, m) * static_cast<int>(det);
 
             for (int i = 0; i < n; i++)
             {
                 H_temp = Utils::add_column(H_temp, B.col(i));
             }
 
-            Eigen::MatrixXd H(m, n);
+            Eigen::MatrixXi H(m, n);
             H.block(0, 0, H_temp.rows(), H_temp.cols()) = H_temp;
             if (n > m)
             {
-                H.block(0, H_temp.cols(), H_temp.rows(), n - m) = Eigen::MatrixXd::Zero(H_temp.rows(), n - m);
+                H.block(0, H_temp.cols(), H_temp.rows(), n - m) = Eigen::MatrixXi::Zero(H_temp.rows(), n - m);
             }
 
             return H;
@@ -59,59 +60,59 @@ namespace Algorithms
         // Computes HNF of an arbitrary matrix
         // @return Eigen::MatrixXd
         // @param B arbitrary matrix
-        Eigen::MatrixXd HNF(const Eigen::MatrixXd &B)
-        {
-            int m = static_cast<int>(B.rows());
-            int n = static_cast<int>(B.cols());
+        // Eigen::MatrixXd HNF(const Eigen::MatrixXd &B)
+        // {
+        //     int m = static_cast<int>(B.rows());
+        //     int n = static_cast<int>(B.cols());
 
-            if (m < 1 || n < 1)
-            {
-                throw std::invalid_argument("Matrix is not initialized");
-            }
-            if (B.isZero(1e-3))
-            {
-                throw std::exception("Matrix is empty");
-            }
+        //     if (m < 1 || n < 1)
+        //     {
+        //         throw std::invalid_argument("Matrix is not initialized");
+        //     }
+        //     if (B.isZero(1e-3))
+        //     {
+        //         throw std::exception("Matrix is empty");
+        //     }
 
-            std::tuple<Eigen::MatrixXd, std::vector<int>> projection = Utils::get_linearly_independent_rows_by_gram_schmidt(B);
-            Eigen::MatrixXd B_stroke = std::get<0>(projection);
-            std::vector<int> inds = std::get<1>(projection);
+        //     std::tuple<Eigen::MatrixXd, std::vector<int>> projection = Utils::get_linearly_independent_rows_by_gram_schmidt(B);
+        //     Eigen::MatrixXd B_stroke = std::get<0>(projection);
+        //     std::vector<int> inds = std::get<1>(projection);
 
-            Eigen::MatrixXd B_stroke_transposed = B_stroke.transpose();
+        //     Eigen::MatrixXd B_stroke_transposed = B_stroke.transpose();
 
-            Eigen::MatrixXd B_double_stroke = HNF_full_row_rank(B_stroke);
+        //     Eigen::MatrixXd B_double_stroke = HNF_full_row_rank(B_stroke);
 
-            std::vector<Eigen::VectorXd> basis;
-            for (const Eigen::VectorXd &vec : B_double_stroke.rowwise())
-            {
-                basis.push_back(vec);
-            }
+        //     std::vector<Eigen::VectorXd> basis;
+        //     for (const Eigen::VectorXd &vec : B_double_stroke.rowwise())
+        //     {
+        //         basis.push_back(vec);
+        //     }
 
-            int counter = 0;
-            for (const Eigen::VectorXd &vec : B.rowwise())
-            {
-                if (std::find(inds.begin(), inds.end(), counter) == inds.end())
-                {
-                    Eigen::VectorXd x = B_stroke_transposed.colPivHouseholderQr().solve(vec);
+        //     int counter = 0;
+        //     for (const Eigen::VectorXd &vec : B.rowwise())
+        //     {
+        //         if (std::find(inds.begin(), inds.end(), counter) == inds.end())
+        //         {
+        //             Eigen::VectorXd x = B_stroke_transposed.colPivHouseholderQr().solve(vec);
 
-                    Eigen::VectorXd result = Eigen::VectorXd::Zero(x.rows());
-                    int second_counter = 0;
-                    for (const Eigen::VectorXd &HNF_vec : B_double_stroke.rowwise())
-                    {
-                        result += HNF_vec * x(second_counter);
-                        second_counter++;
-                    }
-                    basis.push_back(result);
-                }
-                counter++;
-            }
-            Eigen::MatrixXd result(basis.size(), basis[0].rows());
-            for (int i = 0; i < basis.size(); i++)
-            {
-                result.row(i) = basis[i];
-            }
-            return result;
-        }
+        //             Eigen::VectorXd result = Eigen::VectorXd::Zero(x.rows());
+        //             int second_counter = 0;
+        //             for (const Eigen::VectorXd &HNF_vec : B_double_stroke.rowwise())
+        //             {
+        //                 result += HNF_vec * x(second_counter);
+        //                 second_counter++;
+        //             }
+        //             basis.push_back(result);
+        //         }
+        //         counter++;
+        //     }
+        //     Eigen::MatrixXd result(basis.size(), basis[0].rows());
+        //     for (int i = 0; i < basis.size(); i++)
+        //     {
+        //         result.row(i) = basis[i];
+        //     }
+        //     return result;
+        // }
     }
     namespace CVP
     {
@@ -186,7 +187,7 @@ namespace Algorithms
     // @param matrix input matrix
     // @param normalize indicates that should we or not normalize output values
     // @param delete_zero_rows indicates that should we or not delete zero rows
-    Eigen::MatrixXd gram_schmidt(const Eigen::MatrixXd &matrix, bool delete_zero_rows)
+    Eigen::MatrixXd gram_schmidt(const Eigen::MatrixXi &matrix, bool delete_zero_rows)
     {
         std::vector<Eigen::VectorXd> basis;
 
@@ -209,7 +210,7 @@ namespace Algorithms
             //     projections.noalias() += (inner1 / inner2) * b;
             // }
 
-            Eigen::VectorXd result = vec - projections;
+            Eigen::VectorXd result = vec.cast<double>() - projections;
 
             if (delete_zero_rows)
             {
@@ -226,7 +227,7 @@ namespace Algorithms
         }
 
         Eigen::MatrixXd result(matrix.rows(), basis.size());
-        #pragma omp parallel for
+        //#pragma omp parallel for
         for (int i = 0; i < basis.size(); i++)
         {
             result.col(i) = basis[i];
