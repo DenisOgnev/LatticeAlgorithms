@@ -9,9 +9,9 @@ namespace Algorithms
     namespace HNF
     {
         // Computes HNF of a matrix that is full row rank
-        // @return Eigen::Matrix<unsigned long long, Eigen::Dynamic, Eigen::Dynamic>
+        // @return Eigen::MatrixXi
         // @param B full row rank matrix
-        Eigen::Matrix<unsigned long long, Eigen::Dynamic, Eigen::Dynamic> HNF_full_row_rank(const Eigen::Matrix<unsigned long long, Eigen::Dynamic, Eigen::Dynamic> &B)
+        Eigen::MatrixXi HNF_full_row_rank(const Eigen::MatrixXi &B)
         {
             int m = static_cast<int>(B.rows());
             int n = static_cast<int>(B.cols());
@@ -29,8 +29,8 @@ namespace Algorithms
                 throw std::exception("Matrix is empty");
             }
 
-            std::tuple<Eigen::Matrix<unsigned long long, Eigen::Dynamic, Eigen::Dynamic>, Eigen::MatrixXd, std::vector<int>> result_of_gs = Utils::get_linearly_independent_columns_by_gram_schmidt(B);
-            Eigen::Matrix<unsigned long long, Eigen::Dynamic, Eigen::Dynamic> B_stroke = std::get<0>(result_of_gs);
+            std::tuple<Eigen::MatrixXi, Eigen::MatrixXd, std::vector<int>> result_of_gs = Utils::get_linearly_independent_columns_by_gram_schmidt(B);
+            Eigen::MatrixXi B_stroke = std::get<0>(result_of_gs);
             Eigen::MatrixXd ortogonalized = std::get<1>(result_of_gs);
             
             double det = 1.0;
@@ -40,18 +40,18 @@ namespace Algorithms
             }
             det = std::round(det); // to avoid errors with static_cast
 
-            Eigen::Matrix<unsigned long long, Eigen::Dynamic, Eigen::Dynamic> H_temp = Eigen::Matrix<unsigned long long, Eigen::Dynamic, Eigen::Dynamic>::Identity(m, m) * static_cast<int>(det);
+            Eigen::MatrixXi H_temp = Eigen::MatrixXi::Identity(m, m) * static_cast<int>(det);
 
             for (int i = 0; i < n; i++)
             {
                 H_temp = Utils::add_column(H_temp, B.col(i));
             }
 
-            Eigen::Matrix<unsigned long long, Eigen::Dynamic, Eigen::Dynamic> H(m, n);
+            Eigen::MatrixXi H(m, n);
             H.block(0, 0, H_temp.rows(), H_temp.cols()) = H_temp;
             if (n > m)
             {
-                H.block(0, H_temp.cols(), H_temp.rows(), n - m) = Eigen::Matrix<unsigned long long, Eigen::Dynamic, Eigen::Dynamic>::Zero(H_temp.rows(), n - m);
+                H.block(0, H_temp.cols(), H_temp.rows(), n - m) = Eigen::MatrixXi::Zero(H_temp.rows(), n - m);
             }
 
             return H;
@@ -187,7 +187,7 @@ namespace Algorithms
     // @param matrix input matrix
     // @param normalize indicates that should we or not normalize output values
     // @param delete_zero_rows indicates that should we or not delete zero rows
-    Eigen::MatrixXd gram_schmidt(const Eigen::Matrix<unsigned long long, Eigen::Dynamic, Eigen::Dynamic> &matrix, bool delete_zero_rows)
+    Eigen::MatrixXd gram_schmidt(const Eigen::MatrixXi &matrix, bool delete_zero_rows)
     {
         std::vector<Eigen::VectorXd> basis;
 
