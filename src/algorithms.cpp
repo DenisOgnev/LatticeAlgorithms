@@ -8,7 +8,7 @@ namespace Algorithms
 {
     namespace HNF
     {
-        // Computes HNF of matrix that is full row rank
+        // Computes HNF of a matrix that is full row rank
         // @return Eigen::MatrixXd
         // @param B full row rank matrix
         Eigen::MatrixXd HNF_full_row_rank(const Eigen::MatrixXd &B)
@@ -32,6 +32,7 @@ namespace Algorithms
             std::tuple<Eigen::MatrixXd, Eigen::MatrixXd, std::vector<int>> result_of_gs = Utils::get_linearly_independent_columns_by_gram_schmidt(B);
             Eigen::MatrixXd B_stroke = std::get<0>(result_of_gs);
             Eigen::MatrixXd ortogonalized = std::get<1>(result_of_gs);
+            
             double det = 1.0;
             for (const auto &vec : ortogonalized.colwise())
             {
@@ -55,8 +56,23 @@ namespace Algorithms
             return H;
         }
 
+        // Computes HNF of an arbitrary matrix
+        // @return Eigen::MatrixXd
+        // @param B arbitrary matrix
         Eigen::MatrixXd HNF(const Eigen::MatrixXd &B)
         {
+            int m = static_cast<int>(B.rows());
+            int n = static_cast<int>(B.cols());
+
+            if (m < 1 || n < 1)
+            {
+                throw std::invalid_argument("Matrix is not initialized");
+            }
+            if (B.isZero(1e-3))
+            {
+                throw std::exception("Matrix is empty");
+            }
+
             std::tuple<Eigen::MatrixXd, std::vector<int>> projection = Utils::get_linearly_independent_rows_by_gram_schmidt(B);
             Eigen::MatrixXd B_stroke = std::get<0>(projection);
             std::vector<int> inds = std::get<1>(projection);

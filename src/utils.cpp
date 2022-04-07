@@ -5,6 +5,7 @@
 #include <numeric>
 #include <vector>
 #include <stdexcept>
+#include <string> 
 #include "algorithms.hpp"
 
 namespace Utils
@@ -13,31 +14,34 @@ namespace Utils
     // @return Eigen::MatrixXd
     // @param H HNF
     // @param b column to be added
-    Eigen::MatrixXd add_column(const Eigen::MatrixXd &H, const Eigen::ArrayXd &b_column)
+    Eigen::MatrixXd add_column(const Eigen::MatrixXd &H, const Eigen::VectorXd &b_column)
     {
         if (H.rows() == 0)
         {
             return H;
         }
 
-        double a = H(0, 0);
-        Eigen::ArrayXd h = H.block(1, 0, H.rows() - 1, 1);
+        Eigen::VectorXd H_first_col = H.col(0);
+        double a = H_first_col(0);
+        Eigen::VectorXd h = H_first_col.tail(H_first_col.rows() - 1);
         Eigen::MatrixXd H_stroke = H.block(1, 1, H.rows() - 1, H.cols() - 1);
         double b = b_column(0);
-        Eigen::ArrayXd b_stroke = b_column.tail(b_column.rows() - 1);
+        Eigen::VectorXd b_stroke = b_column.tail(b_column.rows() - 1);
+
         std::tuple<int, int, int> gcd_result = gcd_extended(static_cast<int>(a), static_cast<int>(b));
         double g = static_cast<double>(std::get<0>(gcd_result));
         double x = static_cast<double>(std::get<1>(gcd_result));
         double y = static_cast<double>(std::get<2>(gcd_result));
+
         Eigen::Matrix2d U;
         U << x, -b / g, y, a / g;
-        Eigen::MatrixXd temp_matrix(H.rows(), 2);
-        temp_matrix.col(0) = Eigen::ArrayXd(H.col(0));
+        Eigen::MatrixX2d temp_matrix(H.rows(), 2);
+        temp_matrix.col(0) = H_first_col;
         temp_matrix.col(1) = b_column;
-        Eigen::MatrixXd temp_result = temp_matrix * U;
+        Eigen::MatrixX2d temp_result = temp_matrix * U;
 
-        Eigen::ArrayXd h_stroke = temp_result.block(1, 0, temp_result.rows() - 1, 1);
-        Eigen::ArrayXd b_double_stroke = temp_result.block(1, 1, temp_result.rows() - 1, 1);
+        Eigen::VectorXd h_stroke = temp_result.block(1, 0, temp_result.rows() - 1, 1);
+        Eigen::VectorXd b_double_stroke = temp_result.col(1).tail(temp_result.rows() - 1);
 
         b_double_stroke = reduce(b_double_stroke, H_stroke);
 
@@ -46,23 +50,24 @@ namespace Utils
         h_stroke = reduce(h_stroke, H_double_stroke);
 
         Eigen::MatrixXd result(H.rows(), H.cols());
+
         result(0, 0) = g;
-        result.block(1, 0, h_stroke.rows(), 1) = h_stroke;
-        result.block(0, 1, 1, H_double_stroke.rows()).setZero();
+        result.col(0).tail(result.cols() - 1) = h_stroke;
+        result.row(0).tail(result.rows() - 1).setZero();
         result.block(1, 1, H_double_stroke.rows(), H_double_stroke.cols()) = H_double_stroke;
 
         return result;
     }
 
-    Eigen::ArrayXd reduce(const Eigen::ArrayXd &vector, const Eigen::MatrixXd &matrix)
+    Eigen::VectorXd reduce(const Eigen::VectorXd &vector, const Eigen::MatrixXd &matrix)
     {
-        Eigen::ArrayXd result = vector;
+        Eigen::VectorXd result = vector;
         for (int i = 0; i < result.rows(); i++)
         {
-            Eigen::ArrayXd matrix_column = matrix.col(i);
+            Eigen::VectorXd matrix_column = matrix.col(i);
             if (result(i) < 0)
             {
-                double x = abs(ceil(result(i) / matrix(i, i))) + 1;
+                double x = ceil(abs(result(i)) / matrix(i, i));
                 result += matrix_column * x;
             }
             if (result(i) >= matrix(i, i))
@@ -281,6 +286,46 @@ namespace Utils
         int y = x1;
 
         return std::make_tuple(gcd, x, y);
+    }
+
+    // Function that translates Eigen Matrix to std::string for WolframAlpha checking
+    // @return std::string
+    // @param matrix input matrix
+    std::string matrix_to_string(const Eigen::MatrixXd &matrix)
+    {
+        int m = static_cast<int>(matrix.rows());
+        int n = static_cast<int>(matrix.cols());
+        if (m < 1 || n < 1)
+        {
+            throw std::invalid_argument("Matrix is not initialized");
+        }
+        if (matrix.isZero(1e-3))
+        {
+            throw std::exception("Matrix is empty");
+        }
+
+        std::string result = "{";
+        for (const auto &vec : matrix.colwise())
+        {
+            result += "{";
+            for (const auto &elem : vec)
+            {
+                result += std::to_string(static_cast<int>(elem)) + ", ";
+            }
+            result.pop_back();
+            if (!result.empty())
+            {
+                result.pop_back();
+                result += "}, ";
+            }
+        }
+        result.pop_back();
+        if (!result.empty())
+        {
+            result.pop_back();
+            result += "}";
+        }
+        return result;
     }
 
     bool check_linear_independency(const Eigen::MatrixXd &matrix)
