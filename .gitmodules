@@ -1,0 +1,6 @@
+[submodule "3rdparty/boost_multiprecision"]
+	path = 3rdparty/boost_multiprecision
+	url = https://github.com/boostorg/multiprecision
+[submodule "3rdparty/boost_config"]
+	path = 3rdparty/boost_config
+	url = https://github.com/boostorg/config

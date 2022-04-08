@@ -8,12 +8,15 @@ project(LatticeAlgorithms)
 # )
 
 
+
+
 file(GLOB SRC
      "src/*.cpp"
 )
 
 #set(BUILD_SHARED_LIBS FALSE)
-#add_subdirectory(3rdparty/SFML)
+add_subdirectory(3rdparty/boost_config)
+add_subdirectory(3rdparty/boost_multiprecision)
 
 #find_package(OpenCL REQUIRED)
 find_package(OpenMP REQUIRED)
@@ -24,6 +27,7 @@ add_executable(main ${SRC})
 
 #target_link_libraries(main ${OpenCL_LIBRARIES})
 target_link_libraries(main OpenMP::OpenMP_CXX)
+target_link_libraries(main Boost::config Boost::multiprecision)
 #target_link_libraries(main sfml-graphics sfml-audio sfml-window sfml-system)
 
 #file(COPY "src/axpy.cl" DESTINATION ${CMAKE_BINARY_DIR})

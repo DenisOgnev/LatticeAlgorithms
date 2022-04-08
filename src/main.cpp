@@ -4,6 +4,7 @@
 #include "algorithms.hpp"
 #include <Eigen/Dense>
 #include <random>
+#include <boost/multiprecision/cpp_int.hpp>
 
 
 int main()
@@ -16,13 +17,19 @@ int main()
 //  2,  3,  5,  6,  2,  4,
 //  9,  9,  6,  4,  5,  3,
 //  5,  9,  1,  2,  2,  4;
-	std::cout << Utils::matrix_to_string(mat) << "\n";
-	double start_time = omp_get_wtime();
-	Eigen::Matrix<int64_t, Eigen::Dynamic, Eigen::Dynamic> HNF = Algorithms::HNF::HNF_full_row_rank(mat);
-	double end_time = omp_get_wtime();
-	std::cout << end_time - start_time << "\n";
-	std::cout << mat << "\n\n";
-	std::cout << HNF.transpose() << "\n\n";
+	// std::cout << Utils::matrix_to_string(mat) << "\n";
+	// double start_time = omp_get_wtime();
+	// Eigen::Matrix<int64_t, Eigen::Dynamic, Eigen::Dynamic> HNF = Algorithms::HNF::HNF_full_row_rank(mat);
+	// double end_time = omp_get_wtime();
+	// std::cout << end_time - start_time << "\n";
+	// std::cout << mat << "\n\n";
+	// std::cout << HNF.transpose() << "\n\n";
+
+	boost::multiprecision::int1024_t a("10000000000000000000000000000000000000000000000000000000000000000000");
+	boost::multiprecision::int1024_t b("1");
+
+	std::cout << a + b << " " << sizeof(a) << "\n";
+
 	//std::cout << Utils::det_by_gram_schmidt(mat) << "\n";
 
 	// Eigen::MatrixXd mat = Utils::generate_random_matrix_with_full_row_rank(3, 3, 1, 5);
