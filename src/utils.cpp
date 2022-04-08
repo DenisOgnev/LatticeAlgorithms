@@ -6,7 +6,11 @@
 #include <vector>
 #include <stdexcept>
 #include <string> 
+#include <boost/multiprecision/cpp_int.hpp>
 #include "algorithms.hpp"
+
+typedef boost::multiprecision::cpp_int cpp_int;
+typedef boost::multiprecision::cpp_rational cpp_rational;
 
 namespace Utils
 {
@@ -94,7 +98,7 @@ namespace Utils
     // @param n number of columns, must be greater than one and greater than or equal to the parameter m 
     // @param lowest lowest generated number, must be lower than lowest parameter by at least one
     // @param highest highest generated number, must be greater than lowest parameter by at least one
-    Eigen::Matrix<int64_t, Eigen::Dynamic, Eigen::Dynamic> generate_random_matrix_with_full_row_rank(const int m, const int n, int lowest, int highest)
+    Eigen::Matrix<cpp_int, Eigen::Dynamic, Eigen::Dynamic> generate_random_matrix_with_full_row_rank(const int m, const int n, int lowest, int highest)
     {
         if (m > n)
         {
@@ -110,9 +114,9 @@ namespace Utils
         }
         std::random_device rd;
         std::mt19937 gen(rd());
-        std::uniform_int_distribution<int64_t> dis (lowest, highest);
+        std::uniform_int_distribution<int> dis (lowest, highest);
 
-        Eigen::Matrix<int64_t, Eigen::Dynamic, Eigen::Dynamic> matrix = Eigen::Matrix<int64_t, Eigen::Dynamic, Eigen::Dynamic>::NullaryExpr(m, n, [&]()
+        Eigen::Matrix<int, Eigen::Dynamic, Eigen::Dynamic> matrix = Eigen::Matrix<int, Eigen::Dynamic, Eigen::Dynamic>::NullaryExpr(m, n, [&]()
                                                               { return dis(gen); });
 
         Eigen::FullPivLU<Eigen::MatrixXd> lu_decomp(matrix.cast<double>());
@@ -120,14 +124,14 @@ namespace Utils
 
         while (rank != m)
         {
-            matrix = Eigen::Matrix<int64_t, Eigen::Dynamic, Eigen::Dynamic>::NullaryExpr(m, n, [&]()
+            matrix = Eigen::Matrix<int, Eigen::Dynamic, Eigen::Dynamic>::NullaryExpr(m, n, [&]()
                                                   { return dis(gen); });
 
             lu_decomp.compute(matrix.cast<double>());
             rank = lu_decomp.rank();
         }
 
-        return matrix;
+        return matrix.cast<cpp_int>();
     }
 
     // Generates random matrix

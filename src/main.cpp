@@ -9,7 +9,7 @@
 
 int main()
 {
-	Eigen::Matrix<int64_t, Eigen::Dynamic, Eigen::Dynamic> mat = Utils::generate_random_matrix_with_full_row_rank(10, 10, 1, 10);
+	Eigen::Matrix<boost::multiprecision::cpp_int, Eigen::Dynamic, Eigen::Dynamic> mat = Utils::generate_random_matrix_with_full_row_rank(10, 10, 1, 10000000000);
 	//mat << 1, 1, -1, 2;
 	//mat << 6, 10, 6, 9, 1, 6, 5, 9, 5;
 // 	mat << 7, 10,  4,  6,  2, 10, 4,  6,  6,  9,  5,  9,
@@ -22,13 +22,9 @@ int main()
 	// Eigen::Matrix<int64_t, Eigen::Dynamic, Eigen::Dynamic> HNF = Algorithms::HNF::HNF_full_row_rank(mat);
 	// double end_time = omp_get_wtime();
 	// std::cout << end_time - start_time << "\n";
-	// std::cout << mat << "\n\n";
+	std::cout << mat << "\n\n";
 	// std::cout << HNF.transpose() << "\n\n";
-
-	boost::multiprecision::int1024_t a("10000000000000000000000000000000000000000000000000000000000000000000");
-	boost::multiprecision::int1024_t b("1");
-
-	std::cout << a + b << " " << sizeof(a) << "\n";
+	
 
 	//std::cout << Utils::det_by_gram_schmidt(mat) << "\n";
 

@@ -4,6 +4,9 @@
 #include <vector>
 #include <numeric>
 
+typedef boost::multiprecision::cpp_int cpp_int;
+typedef boost::multiprecision::cpp_rational cpp_rational;
+
 namespace Algorithms
 {
     namespace HNF
