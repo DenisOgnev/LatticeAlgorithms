@@ -4,17 +4,17 @@
 #include <vector>
 #include <numeric>
 
-typedef boost::multiprecision::cpp_int cpp_int;
-typedef boost::multiprecision::cpp_rational cpp_rational;
+namespace mp = boost::multiprecision;
+typedef mp::number<mp::cpp_bin_float_100::backend_type, mp::et_off> cpp_bin_float_100_et_off;
 
 namespace Algorithms
 {
     namespace HNF
     {
         // Computes HNF of a matrix that is full row rank
-        // @return Eigen::Matrix<int64_t, Eigen::Dynamic, Eigen::Dynamic>
+        // @return Eigen::Matrix<cpp_int, Eigen::Dynamic, Eigen::Dynamic>
         // @param B full row rank matrix
-        Eigen::Matrix<int64_t, Eigen::Dynamic, Eigen::Dynamic> HNF_full_row_rank(const Eigen::Matrix<int64_t, Eigen::Dynamic, Eigen::Dynamic> &B)
+        Eigen::Matrix<mp::cpp_int, Eigen::Dynamic, Eigen::Dynamic> HNF_full_row_rank(const Eigen::Matrix<mp::cpp_int, Eigen::Dynamic, Eigen::Dynamic> &B)
         {
             int m = static_cast<int>(B.rows());
             int n = static_cast<int>(B.cols());
@@ -32,29 +32,29 @@ namespace Algorithms
                 throw std::exception("Matrix is empty");
             }
 
-            std::tuple<Eigen::Matrix<int64_t, Eigen::Dynamic, Eigen::Dynamic>, Eigen::MatrixXd, std::vector<int>> result_of_gs = Utils::get_linearly_independent_columns_by_gram_schmidt(B);
-            Eigen::Matrix<int64_t, Eigen::Dynamic, Eigen::Dynamic> B_stroke = std::get<0>(result_of_gs);
-            Eigen::MatrixXd ortogonalized = std::get<1>(result_of_gs);
+            std::tuple<Eigen::Matrix<mp::cpp_int, Eigen::Dynamic, Eigen::Dynamic>, Eigen::Matrix<mp::cpp_bin_float_100, Eigen::Dynamic, Eigen::Dynamic>, std::vector<int>> result_of_gs = Utils::get_linearly_independent_columns_by_gram_schmidt(B);
+            Eigen::Matrix<mp::cpp_int, Eigen::Dynamic, Eigen::Dynamic> B_stroke = std::get<0>(result_of_gs);
+            Eigen::Matrix<cpp_bin_float_100_et_off, Eigen::Dynamic, Eigen::Dynamic> ortogonalized = std::get<1>(result_of_gs);
             
-            double det = 1.0;
+            mp::cpp_bin_float_100 det = 1.0;
             for (const auto &vec : ortogonalized.colwise())
             {
                 det *= vec.norm();
             }
-            det = std::round(det); // to avoid errors with static_cast
+            det = boost::multiprecision::round(det); // to avoid errors with static_cast
 
-            Eigen::Matrix<int64_t, Eigen::Dynamic, Eigen::Dynamic> H_temp = Eigen::Matrix<int64_t, Eigen::Dynamic, Eigen::Dynamic>::Identity(m, m) * static_cast<int64_t>(det);
+            Eigen::Matrix<mp::cpp_int, Eigen::Dynamic, Eigen::Dynamic> H_temp = Eigen::Matrix<mp::cpp_int, Eigen::Dynamic, Eigen::Dynamic>::Identity(m, m) * static_cast<mp::cpp_int>(det);
 
             for (int i = 0; i < n; i++)
             {
                 H_temp = Utils::add_column(H_temp, B.col(i));
             }
 
-            Eigen::Matrix<int64_t, Eigen::Dynamic, Eigen::Dynamic> H(m, n);
+            Eigen::Matrix<mp::cpp_int, Eigen::Dynamic, Eigen::Dynamic> H(m, n);
             H.block(0, 0, H_temp.rows(), H_temp.cols()) = H_temp;
             if (n > m)
             {
-                H.block(0, H_temp.cols(), H_temp.rows(), n - m) = Eigen::Matrix<int64_t, Eigen::Dynamic, Eigen::Dynamic>::Zero(H_temp.rows(), n - m);
+                H.block(0, H_temp.cols(), H_temp.rows(), n - m) = Eigen::Matrix<mp::cpp_int, Eigen::Dynamic, Eigen::Dynamic>::Zero(H_temp.rows(), n - m);
             }
 
             return H;
@@ -190,51 +190,51 @@ namespace Algorithms
     // @param matrix input matrix
     // @param normalize indicates that should we or not normalize output values
     // @param delete_zero_rows indicates that should we or not delete zero rows
-    Eigen::MatrixXd gram_schmidt(const Eigen::Matrix<int64_t, Eigen::Dynamic, Eigen::Dynamic> &matrix, bool delete_zero_rows)
-    {
-        std::vector<Eigen::VectorXd> basis;
+    // Eigen::MatrixXd gram_schmidt(const Eigen::Matrix<cpp_int, Eigen::Dynamic, Eigen::Dynamic> &matrix, bool delete_zero_rows)
+    // {
+    //     std::vector<Eigen::VectorXd> basis;
 
-        for (const auto &vec : matrix.colwise())
-        {
-            Eigen::VectorXd projections = Eigen::VectorXd::Zero(vec.size());
+    //     for (const auto &vec : matrix.colwise())
+    //     {
+    //         Eigen::VectorXd projections = Eigen::VectorXd::Zero(vec.size());
 
-            //#pragma omp parallel for
-            for (int i = 0; i < basis.size(); i++)
-            {
-                double inner1 = std::inner_product(vec.data(), vec.data() + vec.size(), basis[i].data(), 0.0);
-                double inner2 = std::inner_product(basis[i].data(), basis[i].data() + basis[i].size(), basis[i].data(), 0.0);
-                projections.noalias() += (inner1 / inner2) * basis[i];
-            }
-            // NO PARALLEL
-            // for (const auto &b : basis)
-            // {
-            //     double inner1 = std::inner_product(vec.data(), vec.data() + vec.size(), b.data(), 0.0);
-            //     double inner2 = std::inner_product(b.data(), b.data() + b.size(), b.data(), 0.0);
-            //     projections.noalias() += (inner1 / inner2) * b;
-            // }
+    //         //#pragma omp parallel for
+    //         for (int i = 0; i < basis.size(); i++)
+    //         {
+    //             double inner1 = std::inner_product(vec.data(), vec.data() + vec.size(), basis[i].data(), 0.0);
+    //             double inner2 = std::inner_product(basis[i].data(), basis[i].data() + basis[i].size(), basis[i].data(), 0.0);
+    //             projections.noalias() += (inner1 / inner2) * basis[i];
+    //         }
+    //         // NO PARALLEL
+    //         // for (const auto &b : basis)
+    //         // {
+    //         //     double inner1 = std::inner_product(vec.data(), vec.data() + vec.size(), b.data(), 0.0);
+    //         //     double inner2 = std::inner_product(b.data(), b.data() + b.size(), b.data(), 0.0);
+    //         //     projections.noalias() += (inner1 / inner2) * b;
+    //         // }
 
-            Eigen::VectorXd result = vec.cast<double>() - projections;
+    //         Eigen::VectorXd result = vec.cast<double>() - projections;
 
-            if (delete_zero_rows)
-            {
-                bool is_all_zero = result.isZero(1e-3);
-                if (!is_all_zero)
-                {
-                    basis.push_back(result);
-                }
-            }
-            else
-            {
-                basis.push_back(result);
-            }
-        }
+    //         if (delete_zero_rows)
+    //         {
+    //             bool is_all_zero = result.isZero(1e-3);
+    //             if (!is_all_zero)
+    //             {
+    //                 basis.push_back(result);
+    //             }
+    //         }
+    //         else
+    //         {
+    //             basis.push_back(result);
+    //         }
+    //     }
 
-        Eigen::MatrixXd result(matrix.rows(), basis.size());
-        //#pragma omp parallel for
-        for (int i = 0; i < basis.size(); i++)
-        {
-            result.col(i) = basis[i];
-        }
-        return result;
-    }
+    //     Eigen::MatrixXd result(matrix.rows(), basis.size());
+    //     //#pragma omp parallel for
+    //     for (int i = 0; i < basis.size(); i++)
+    //     {
+    //         result.col(i) = basis[i];
+    //     }
+    //     return result;
+    // }
 }
