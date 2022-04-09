@@ -6,6 +6,8 @@
 #include <vector>
 #include <stdexcept>
 #include <string> 
+#include <chrono>
+#include <thread>
 #include "algorithms.hpp"
 
 namespace mp = boost::multiprecision;
@@ -36,13 +38,13 @@ namespace Utils
         mp::cpp_int g, x, y;
         std::tie(g, x, y) = gcd_result;
 
-        Eigen::Matrix<mp::cpp_bin_float_100, 2, 2> U;
-        //U << static_cast<mp::cpp_bin_float_100>(x), -b / static_cast<mp::cpp_bin_float_100>(g), static_cast<mp::cpp_bin_float_100>(y), a / static_cast<mp::cpp_bin_float_100>(g);
-        U << static_cast<mp::cpp_bin_float_100>(x), static_cast<mp::cpp_bin_float_100>(-b) / static_cast<mp::cpp_bin_float_100>(g), static_cast<mp::cpp_bin_float_100>(y), static_cast<mp::cpp_bin_float_100>(a) / static_cast<mp::cpp_bin_float_100>(g);
+        Eigen::Matrix<mp::cpp_rational, 2, 2> U;
+        //U << static_cast<mp::cpp_bin_float_100>(x), static_cast<mp::cpp_bin_float_100>(-b) / static_cast<mp::cpp_bin_float_100>(g), static_cast<mp::cpp_bin_float_100>(y), static_cast<mp::cpp_bin_float_100>(a) / static_cast<mp::cpp_bin_float_100>(g);
+        U << x.convert_to<mp::cpp_rational>(), (-b).convert_to<mp::cpp_rational>() / g.convert_to<mp::cpp_rational>(), y.convert_to<mp::cpp_rational>(), a.convert_to<mp::cpp_rational>() / g.convert_to<mp::cpp_rational>();
         Eigen::Matrix<mp::cpp_int, Eigen::Dynamic, Eigen::Dynamic> temp_matrix(H.rows(), 2);
         temp_matrix.col(0) = H_first_col;
         temp_matrix.col(1) = b_column;
-        Eigen::Matrix<mp::cpp_int, Eigen::Dynamic, Eigen::Dynamic> temp_result = (temp_matrix.cast<mp::cpp_bin_float_100>() * U).cast<mp::cpp_int>();
+        Eigen::Matrix<mp::cpp_int, Eigen::Dynamic, Eigen::Dynamic> temp_result = (temp_matrix.cast<mp::cpp_rational>() * U).cast<mp::cpp_int>();
 
         Eigen::Vector<mp::cpp_int, Eigen::Dynamic> h_stroke = temp_result.col(0).tail(temp_result.rows() - 1);
         Eigen::Vector<mp::cpp_int, Eigen::Dynamic> b_double_stroke = temp_result.col(1).tail(temp_result.rows() - 1);
@@ -88,11 +90,20 @@ namespace Utils
             //     result -= matrix_column * x;
             // }
             Eigen::Vector<mp::cpp_int, Eigen::Dynamic> matrix_column = matrix.col(i);
-            mp::cpp_bin_float_100 vec_elem = static_cast<mp::cpp_bin_float_100>(result(i));
-            mp::cpp_bin_float_100 matrix_elem = static_cast<mp::cpp_bin_float_100>(matrix(i, i));
-            mp::cpp_int x = static_cast<mp::cpp_int>(mp::floor(vec_elem / matrix_elem));
+            mp::cpp_int t_vec_elem = result(i);
+            mp::cpp_int t_matrix_elem = matrix(i, i);
 
-            result -= matrix_column * x;
+            boost::multiprecision::cpp_int x;
+            if (t_vec_elem >= 0)
+            {
+                x = (t_vec_elem / t_matrix_elem);
+            }
+            else
+            {
+                x = (t_vec_elem - (t_matrix_elem - 1)) / t_matrix_elem;
+            }
+
+            result.noalias() -= matrix_column * x;
         }
         return result;
     }

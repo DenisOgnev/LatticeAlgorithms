@@ -42,6 +42,7 @@ namespace Algorithms
                 det *= vec.norm();
             }
             det = boost::multiprecision::round(det); // to avoid errors with static_cast
+            //std::cout << det << "\n";
 
             Eigen::Matrix<mp::cpp_int, Eigen::Dynamic, Eigen::Dynamic> H_temp = Eigen::Matrix<mp::cpp_int, Eigen::Dynamic, Eigen::Dynamic>::Identity(m, m) * static_cast<mp::cpp_int>(det);
 
