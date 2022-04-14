@@ -16,23 +16,23 @@ typedef mp::number<mp::cpp_bin_float_100::backend_type, mp::et_off> cpp_bin_floa
 namespace Utils
 {
     // Function for computing HNF of full row rank matrix
-    // @return Eigen::Matrix<cpp_int, Eigen::Dynamic, Eigen::Dynamic>
+    // @return Eigen::Matrix<cpp_int, -1, -1>
     // @param H HNF
     // @param b column to be added
-    Eigen::Matrix<mp::cpp_int, Eigen::Dynamic, Eigen::Dynamic> add_column(const Eigen::Matrix<mp::cpp_int, Eigen::Dynamic, Eigen::Dynamic> &H, const Eigen::Vector<mp::cpp_int, Eigen::Dynamic> &b_column)
+    Eigen::Matrix<mp::cpp_int, -1, -1> add_column(const Eigen::Matrix<mp::cpp_int, -1, -1> &H, const Eigen::Vector<mp::cpp_int, -1> &b_column)
     {
         if (H.rows() == 0)
         {
             return H;
         }
 
-        Eigen::Vector<mp::cpp_int, Eigen::Dynamic> H_first_col = H.col(0);
+        Eigen::Vector<mp::cpp_int, -1> H_first_col = H.col(0);
 
         mp::cpp_int a = H_first_col(0);
-        Eigen::Vector<mp::cpp_int, Eigen::Dynamic> h = H_first_col.tail(H_first_col.rows() - 1);
-        Eigen::Matrix<mp::cpp_int, Eigen::Dynamic, Eigen::Dynamic> H_stroke = H.block(1, 1, H.rows() - 1, H.cols() - 1);
+        Eigen::Vector<mp::cpp_int, -1> h = H_first_col.tail(H_first_col.rows() - 1);
+        Eigen::Matrix<mp::cpp_int, -1, -1> H_stroke = H.block(1, 1, H.rows() - 1, H.cols() - 1);
         mp::cpp_int b = b_column(0);
-        Eigen::Vector<mp::cpp_int, Eigen::Dynamic> b_stroke = b_column.tail(b_column.rows() - 1);
+        Eigen::Vector<mp::cpp_int, -1> b_stroke = b_column.tail(b_column.rows() - 1);
 
         std::tuple<mp::cpp_int, mp::cpp_int, mp::cpp_int> gcd_result = gcd_extended(a, b);
         mp::cpp_int g, x, y;
@@ -43,21 +43,21 @@ namespace Utils
         U << x, -b / g, y, a / g;
         
 
-        Eigen::Matrix<mp::cpp_int, Eigen::Dynamic, Eigen::Dynamic> temp_matrix(H.rows(), 2);
+        Eigen::Matrix<mp::cpp_int, -1, 2> temp_matrix(H.rows(), 2);
         temp_matrix.col(0) = H_first_col;
         temp_matrix.col(1) = b_column;
-        Eigen::Matrix<mp::cpp_int, Eigen::Dynamic, Eigen::Dynamic> temp_result = temp_matrix * U;
+        Eigen::Matrix<mp::cpp_int, -1, 2> temp_result = temp_matrix * U;
 
-        Eigen::Vector<mp::cpp_int, Eigen::Dynamic> h_stroke = temp_result.col(0).tail(temp_result.rows() - 1);
-        Eigen::Vector<mp::cpp_int, Eigen::Dynamic> b_double_stroke = temp_result.col(1).tail(temp_result.rows() - 1);
+        Eigen::Vector<mp::cpp_int, -1> h_stroke = temp_result.col(0).tail(temp_result.rows() - 1);
+        Eigen::Vector<mp::cpp_int, -1> b_double_stroke = temp_result.col(1).tail(temp_result.rows() - 1);
 
         b_double_stroke = reduce(b_double_stroke, H_stroke);
 
-        Eigen::Matrix<mp::cpp_int, Eigen::Dynamic, Eigen::Dynamic> H_double_stroke = add_column(H_stroke, b_double_stroke);
+        Eigen::Matrix<mp::cpp_int, -1, -1> H_double_stroke = add_column(H_stroke, b_double_stroke);
 
         h_stroke = reduce(h_stroke, H_double_stroke);
 
-        Eigen::Matrix<mp::cpp_int, Eigen::Dynamic, Eigen::Dynamic> result(H.rows(), H.cols());
+        Eigen::Matrix<mp::cpp_int, -1, -1> result(H.rows(), H.cols());
 
         result(0, 0) = g;
         result.col(0).tail(result.cols() - 1) = h_stroke;
@@ -68,30 +68,15 @@ namespace Utils
     }
 
     // Function for computing HNF, reduces elements of vector modulo diagonal elements of matrix
-    // @return Eigen::Matrix<cpp_int, Eigen::Dynamic, Eigen::Dynamic>
+    // @return Eigen::Matrix<cpp_int, -1, -1>
     // @param vector vector to be reduced
     // @param matrix input matrix
-    Eigen::Vector<mp::cpp_int, Eigen::Dynamic> reduce(const Eigen::Vector<mp::cpp_int, Eigen::Dynamic> &vector, const Eigen::Matrix<mp::cpp_int, Eigen::Dynamic, Eigen::Dynamic> &matrix)
+    Eigen::Vector<mp::cpp_int, -1> reduce(const Eigen::Vector<mp::cpp_int, -1> &vector, const Eigen::Matrix<mp::cpp_int, -1, -1> &matrix)
     {
-        Eigen::Vector<mp::cpp_int, Eigen::Dynamic> result = vector;
+        Eigen::Vector<mp::cpp_int, -1> result = vector;
         for (int i = 0; i < result.rows(); i++)
         {
-            // Eigen::Vector<cpp_int, Eigen::Dynamic> matrix_column = matrix.col(i);
-            // double vec_elem = static_cast<double>(result(i));
-            // double matrix_elem = static_cast<double>(matrix(i, i));
-            // cpp_int x;
-            // if (vec_elem < 0)
-            // {
-            //     x = static_cast<cpp_int>(std::ceil(std::abs(vec_elem) / matrix_elem));
-            //     result += matrix_column * x;
-            //     vec_elem = static_cast<double>(result(i));
-            // }
-            // if (vec_elem >= matrix_elem)
-            // {
-            //     x = static_cast<cpp_int>(std::floor(vec_elem / matrix_elem));
-            //     result -= matrix_column * x;
-            // }
-            Eigen::Vector<mp::cpp_int, Eigen::Dynamic> matrix_column = matrix.col(i);
+            Eigen::Vector<mp::cpp_int, -1> matrix_column = matrix.col(i);
             mp::cpp_int t_vec_elem = result(i);
             mp::cpp_int t_matrix_elem = matrix(i, i);
 
@@ -111,12 +96,12 @@ namespace Utils
     }
     
     // Generates random matrix with full row rank (or with all rows linearly independent)
-    // @return Eigen::Matrix<cpp_int, Eigen::Dynamic, Eigen::Dynamic>
+    // @return Eigen::Matrix<cpp_int, -1, -1>
     // @param m number of rows, must be greater than one and less than or equal to the parameter n
     // @param n number of columns, must be greater than one and greater than or equal to the parameter m 
     // @param lowest lowest generated number, must be lower than lowest parameter by at least one
     // @param highest highest generated number, must be greater than lowest parameter by at least one
-    Eigen::Matrix<mp::cpp_int, Eigen::Dynamic, Eigen::Dynamic> generate_random_matrix_with_full_row_rank(const int m, const int n, int lowest, int highest)
+    Eigen::Matrix<mp::cpp_int, -1, -1> generate_random_matrix_with_full_row_rank(const int m, const int n, int lowest, int highest)
     {
         if (m > n)
         {
@@ -134,7 +119,7 @@ namespace Utils
         std::mt19937 gen(rd());
         std::uniform_int_distribution<int> dis (lowest, highest);
 
-        Eigen::Matrix<int, Eigen::Dynamic, Eigen::Dynamic> matrix = Eigen::Matrix<int, Eigen::Dynamic, Eigen::Dynamic>::NullaryExpr(m, n, [&]()
+        Eigen::Matrix<int, -1, -1> matrix = Eigen::Matrix<int, -1, -1>::NullaryExpr(m, n, [&]()
                                                               { return dis(gen); });
 
         Eigen::FullPivLU<Eigen::MatrixXd> lu_decomp(matrix.cast<double>());
@@ -142,7 +127,7 @@ namespace Utils
 
         while (rank != m)
         {
-            matrix = Eigen::Matrix<int, Eigen::Dynamic, Eigen::Dynamic>::NullaryExpr(m, n, [&]()
+            matrix = Eigen::Matrix<int, -1, -1>::NullaryExpr(m, n, [&]()
                                                   { return dis(gen); });
 
             lu_decomp.compute(matrix.cast<double>());
@@ -153,12 +138,12 @@ namespace Utils
     }
 
     // Generates random matrix
-    // @return Eigen::Matrix<cpp_int, Eigen::Dynamic, Eigen::Dynamic>
+    // @return Eigen::Matrix<cpp_int, -1, -1>
     // @param m number of rows, must be greater than one
     // @param n number of columns, must be greater than one
     // @param lowest lowest generated number, must be lower than lowest parameter by at least one
     // @param highest highest generated number, must be greater than lowest parameter by at least one
-    Eigen::Matrix<mp::cpp_int, Eigen::Dynamic, Eigen::Dynamic> generate_random_matrix(const int m, const int n, int lowest, int highest)
+    Eigen::Matrix<mp::cpp_int, -1, -1> generate_random_matrix(const int m, const int n, int lowest, int highest)
     {
         if (m < 1 || n < 1)
         {
@@ -173,7 +158,7 @@ namespace Utils
         std::mt19937 gen(rd());
         std::uniform_int_distribution<int> dis (lowest, highest);
 
-        Eigen::Matrix<int, Eigen::Dynamic, Eigen::Dynamic> matrix = Eigen::Matrix<int, Eigen::Dynamic, Eigen::Dynamic>::NullaryExpr(m, n, [&]()
+        Eigen::Matrix<int, -1, -1> matrix = Eigen::Matrix<int, -1, -1>::NullaryExpr(m, n, [&]()
                                                               { return dis(gen); });
 
         return matrix.cast<mp::cpp_int>();
@@ -181,27 +166,37 @@ namespace Utils
 
     // Returns matrix that consist of linearly independent columns of input matrix, othogonalized matrix and indexes of that columns in input matrix
     // @param matrix input matrix
-    // @return std::tuple<Eigen::Matrix<cpp_int, Eigen::Dynamic, Eigen::Dynamic>, Eigen::Matrix<cpp_bin_float_100, Eigen::Dynamic, Eigen::Dynamic>, std::vector<int>>
-    std::tuple<Eigen::Matrix<mp::cpp_int, Eigen::Dynamic, Eigen::Dynamic>, Eigen::Matrix<mp::cpp_rational, Eigen::Dynamic, Eigen::Dynamic>, std::vector<int>> get_linearly_independent_columns_by_gram_schmidt(const Eigen::Matrix<mp::cpp_int, Eigen::Dynamic, Eigen::Dynamic> &matrix)
+    // @return std::tuple<Eigen::Matrix<cpp_int, -1, -1>, Eigen::Matrix<cpp_bin_float_100, -1, -1>, std::vector<int>>
+    std::tuple<Eigen::Matrix<mp::cpp_int, -1, -1>, Eigen::Matrix<mp::cpp_rational, -1, -1>> get_linearly_independent_columns_by_gram_schmidt(const Eigen::Matrix<mp::cpp_int, -1, -1> &matrix)
     {
-        std::vector<Eigen::Vector<mp::cpp_rational, Eigen::Dynamic>> basis;
+        std::vector<Eigen::Vector<mp::cpp_rational, -1>> basis;
         std::vector<int> indexes;
 
         int counter = 0;
-        for (const Eigen::Vector<mp::cpp_rational, Eigen::Dynamic> &vec : matrix.cast<mp::cpp_rational>().colwise())
+        for (const Eigen::Vector<mp::cpp_rational, -1> &vec : matrix.cast<mp::cpp_rational>().colwise())
         {
-            Eigen::Vector<mp::cpp_rational, Eigen::Dynamic> projections = Eigen::Vector<mp::cpp_rational, Eigen::Dynamic>::Zero(vec.size());
+            Eigen::Vector<mp::cpp_rational, -1> projections = Eigen::Vector<mp::cpp_rational, -1>::Zero(vec.size());
 
-            //#pragma omp parallel for
             for (int i = 0; i < basis.size(); i++)
             {
-                mp::cpp_rational inner1 = std::inner_product(vec.data(), vec.data() + vec.size(), basis[i].data(), mp::cpp_rational(0.0));
-                mp::cpp_rational inner2 = std::inner_product(basis[i].data(), basis[i].data() + basis[i].size(), basis[i].data(), mp::cpp_rational(0.0));
-                //#pragma omp critical
-                projections.noalias() += (inner1 / inner2) * basis[i];
+                Eigen::Vector<mp::cpp_rational, -1> basis_vector = basis[i];
+                mp::cpp_rational inner1;
+                mp::cpp_rational inner2;
+                #pragma omp parallel sections
+                {
+                    #pragma omp section
+                    {
+                        inner1 = std::inner_product(vec.data(), vec.data() + vec.size(), basis_vector.data(), mp::cpp_rational(0.0));
+                    }
+                    #pragma omp section
+                    {
+                        inner2 = std::inner_product(basis_vector.data(), basis_vector.data() + basis_vector.size(), basis_vector.data(), mp::cpp_rational(0.0));
+                    }
+                }
+                projections.noalias() += (inner1 / inner2) * basis_vector;
             }
 
-            Eigen::Vector<mp::cpp_rational, Eigen::Dynamic> result = vec - projections;
+            Eigen::Vector<mp::cpp_rational, -1> result = vec - projections;
 
             bool is_all_zero = result.isZero(1e-3);
             if (!is_all_zero)
@@ -212,30 +207,30 @@ namespace Utils
             counter++;
         }
 
-        Eigen::Matrix<mp::cpp_int, Eigen::Dynamic, Eigen::Dynamic> result(matrix.rows(), indexes.size());
-        Eigen::Matrix<mp::cpp_rational, Eigen::Dynamic, Eigen::Dynamic> gram_schmidt(matrix.rows(), basis.size());
-        //#pragma omp parallel for
+        Eigen::Matrix<mp::cpp_int, -1, -1> result(matrix.rows(), indexes.size());
+        Eigen::Matrix<mp::cpp_rational, -1, -1> gram_schmidt(matrix.rows(), basis.size());
+        #pragma omp parallel for
         for (int i = 0; i < indexes.size(); i++)
         {
             result.col(i) = matrix.col(indexes[i]);
             gram_schmidt.col(i) = basis[i];
         }
-        return std::make_tuple(result, gram_schmidt, indexes);
+        return std::make_tuple(result, gram_schmidt);
     }
 
     // Returns matrix that consist of linearly independent rows of input matrix and indexes of that rows in input matrix
     // @param matrix input matrix
-    // @return std::tuple<Eigen::Matrix<cpp_int, Eigen::Dynamic, Eigen::Dynamic>, std::vector<int>>
-    // std::tuple<Eigen::Matrix<mp::cpp_int, Eigen::Dynamic, Eigen::Dynamic>, std::vector<int>> get_linearly_independent_rows_by_gram_schmidt(const Eigen::Matrix<mp::cpp_int, Eigen::Dynamic, Eigen::Dynamic> &matrix)
+    // @return std::tuple<Eigen::Matrix<cpp_int, -1, -1>, std::vector<int>>
+    // std::tuple<Eigen::Matrix<mp::cpp_int, -1, -1>, std::vector<int>> get_linearly_independent_rows_by_gram_schmidt(const Eigen::Matrix<mp::cpp_int, -1, -1> &matrix)
     // {
-    //     std::vector<Eigen::Vector<mp::cpp_bin_float_100, Eigen::Dynamic>> basis;
+    //     std::vector<Eigen::Vector<mp::cpp_bin_float_100, -1>> basis;
     //     std::vector<int> indexes;
     //     std::vector<mp::cpp_bin_float_100> uji;
 
     //     int counter = 0;
-    //     for (const Eigen::Vector<mp::cpp_int, Eigen::Dynamic> &vec : matrix.rowwise())
+    //     for (const Eigen::Vector<mp::cpp_int, -1> &vec : matrix.rowwise())
     //     {
-    //         Eigen::Vector<mp::cpp_bin_float_100, Eigen::Dynamic> projections = Eigen::Vector<mp::cpp_bin_float_100, Eigen::Dynamic>::Zero(vec.size());
+    //         Eigen::Vector<mp::cpp_bin_float_100, -1> projections = Eigen::Vector<mp::cpp_bin_float_100, -1>::Zero(vec.size());
 
     //         //#pragma omp parallel for
     //         for (int i = 0; i < basis.size(); i++)
@@ -253,7 +248,7 @@ namespace Utils
     //         //     projections.noalias() += (inner1 / inner2) * b;
     //         // }
 
-    //         Eigen::Vector<mp::cpp_bin_float_100, Eigen::Dynamic> result = vec.cast<mp::cpp_bin_float_100>() - projections;
+    //         Eigen::Vector<mp::cpp_bin_float_100, -1> result = vec.cast<mp::cpp_bin_float_100>() - projections;
 
     //         bool is_all_zero = result.isZero(1e-3);
     //         if (!is_all_zero)
@@ -264,7 +259,7 @@ namespace Utils
     //         counter++;
     //     }
 
-    //     Eigen::Matrix<mp::cpp_int, Eigen::Dynamic, Eigen::Dynamic> result(indexes.size(), matrix.cols());
+    //     Eigen::Matrix<mp::cpp_int, -1, -1> result(indexes.size(), matrix.cols());
     //     //#pragma omp parallel for
     //     for (int i = 0; i < indexes.size(); i++)
     //     {
@@ -276,7 +271,7 @@ namespace Utils
     // Computes determinant by using Gram Schmidt orthogonalization
     // @return double
     // @param matrix input matrix
-    // double det_by_gram_schmidt(const Eigen::Matrix<cpp_int, Eigen::Dynamic, Eigen::Dynamic> &matrix)
+    // double det_by_gram_schmidt(const Eigen::Matrix<cpp_int, -1, -1> &matrix)
     // {
     //     double result = 1.0;
     //     Eigen::MatrixXd gs = Algorithms::gram_schmidt(matrix);
@@ -315,7 +310,7 @@ namespace Utils
     // Function that translates Eigen Matrix to std::string for WolframAlpha checking
     // @return std::string
     // @param matrix input matrix
-    std::string matrix_to_string(const Eigen::Matrix<mp::cpp_int, Eigen::Dynamic, Eigen::Dynamic> &matrix)
+    std::string matrix_to_string(const Eigen::Matrix<mp::cpp_int, -1, -1> &matrix)
     {
         int m = static_cast<int>(matrix.rows());
         int n = static_cast<int>(matrix.cols());
@@ -352,17 +347,6 @@ namespace Utils
         }
         return result;
     }
-
-    // bool check_linear_independency(const Eigen::Matrix<cpp_int, Eigen::Dynamic, Eigen::Dynamic> &matrix)
-    // {
-    //     std::vector<int> inds = std::get<2>(get_linearly_independent_columns_by_gram_schmidt(matrix));
-
-    //     if (inds.size() != matrix.rows())
-    //     {
-    //         return false;
-    //     }
-    //     return true;
-    // }
 
     // Generates random array
     // @return Eigen::VectorXd

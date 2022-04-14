@@ -12,9 +12,9 @@ namespace Algorithms
     namespace HNF
     {
         // Computes HNF of a matrix that is full row rank
-        // @return Eigen::Matrix<cpp_int, Eigen::Dynamic, Eigen::Dynamic>
+        // @return Eigen::Matrix<cpp_int, -1, -1>
         // @param B full row rank matrix
-        Eigen::Matrix<mp::cpp_int, Eigen::Dynamic, Eigen::Dynamic> HNF_full_row_rank(const Eigen::Matrix<mp::cpp_int, Eigen::Dynamic, Eigen::Dynamic> &B)
+        Eigen::Matrix<mp::cpp_int, -1, -1> HNF_full_row_rank(const Eigen::Matrix<mp::cpp_int, -1, -1> &B)
         {
             int m = static_cast<int>(B.rows());
             int n = static_cast<int>(B.cols());
@@ -32,10 +32,16 @@ namespace Algorithms
                 throw std::exception("Matrix is empty");
             }
 
-            std::tuple<Eigen::Matrix<mp::cpp_int, Eigen::Dynamic, Eigen::Dynamic>, Eigen::Matrix<mp::cpp_rational, Eigen::Dynamic, Eigen::Dynamic>, std::vector<int>> result_of_gs = Utils::get_linearly_independent_columns_by_gram_schmidt(B);
-            Eigen::Matrix<mp::cpp_int, Eigen::Dynamic, Eigen::Dynamic> B_stroke = std::get<0>(result_of_gs);
-            Eigen::Matrix<mp::cpp_rational, Eigen::Dynamic, Eigen::Dynamic> ortogonalized = std::get<1>(result_of_gs);
+            Eigen::Matrix<mp::cpp_int, -1, -1> B_stroke;
+            Eigen::Matrix<mp::cpp_rational, -1, -1> ortogonalized;
+
+            double start_time = omp_get_wtime();
+            std::tuple<Eigen::Matrix<mp::cpp_int, -1, -1>, Eigen::Matrix<mp::cpp_rational, -1, -1>> result_of_gs = Utils::get_linearly_independent_columns_by_gram_schmidt(B);
+            double end_time = omp_get_wtime();
+            std::cout << end_time - start_time << "\n";
             
+            std::tie(B_stroke, ortogonalized) = result_of_gs;
+
             mp::cpp_rational t_det = 1.0;
             for (const Eigen::Vector<mp::cpp_rational, -1> &vec : ortogonalized.colwise())
             {
@@ -44,27 +50,27 @@ namespace Algorithms
             mp::cpp_int det = mp::sqrt(mp::numerator(t_det));
             std::cout << det << "\n";
 
-            Eigen::Matrix<mp::cpp_int, Eigen::Dynamic, Eigen::Dynamic> H_temp = Eigen::Matrix<mp::cpp_int, Eigen::Dynamic, Eigen::Dynamic>::Identity(m, m) * det;
+            Eigen::Matrix<mp::cpp_int, -1, -1> H_temp = Eigen::Matrix<mp::cpp_int, -1, -1>::Identity(m, m) * det;
 
             for (int i = 0; i < n; i++)
             {
                 H_temp = Utils::add_column(H_temp, B.col(i));
             }
 
-            Eigen::Matrix<mp::cpp_int, Eigen::Dynamic, Eigen::Dynamic> H(m, n);
+            Eigen::Matrix<mp::cpp_int, -1, -1> H(m, n);
             H.block(0, 0, H_temp.rows(), H_temp.cols()) = H_temp;
             if (n > m)
             {
-                H.block(0, H_temp.cols(), H_temp.rows(), n - m) = Eigen::Matrix<mp::cpp_int, Eigen::Dynamic, Eigen::Dynamic>::Zero(H_temp.rows(), n - m);
+                H.block(0, H_temp.cols(), H_temp.rows(), n - m) = Eigen::Matrix<mp::cpp_int, -1, -1>::Zero(H_temp.rows(), n - m);
             }
 
             return H;
         }
 
         // Computes HNF of an arbitrary matrix
-        // @return Eigen::Matrix<cpp_int, Eigen::Dynamic, Eigen::Dynamic>
+        // @return Eigen::Matrix<cpp_int, -1, -1>
         // @param B arbitrary matrix
-        // Eigen::Matrix<mp::cpp_int, Eigen::Dynamic, Eigen::Dynamic> HNF(const Eigen::Matrix<mp::cpp_int, Eigen::Dynamic, Eigen::Dynamic> &B)
+        // Eigen::Matrix<mp::cpp_int, -1, -1> HNF(const Eigen::Matrix<mp::cpp_int, -1, -1> &B)
         // {
         //     int m = static_cast<int>(B.rows());
         //     int n = static_cast<int>(B.cols());
@@ -78,13 +84,13 @@ namespace Algorithms
         //         throw std::exception("Matrix is empty");
         //     }
 
-        //     std::tuple<Eigen::Matrix<mp::cpp_int, Eigen::Dynamic, Eigen::Dynamic>, std::vector<int>> projection = Utils::get_linearly_independent_rows_by_gram_schmidt(B);
-        //     Eigen::Matrix<mp::cpp_int, Eigen::Dynamic, Eigen::Dynamic> B_stroke = std::get<0>(projection);
+        //     std::tuple<Eigen::Matrix<mp::cpp_int, -1, -1>, std::vector<int>> projection = Utils::get_linearly_independent_rows_by_gram_schmidt(B);
+        //     Eigen::Matrix<mp::cpp_int, -1, -1> B_stroke = std::get<0>(projection);
         //     std::vector<int> inds = std::get<1>(projection);
 
-        //     Eigen::Matrix<mp::cpp_int, Eigen::Dynamic, Eigen::Dynamic> B_stroke_transposed = B_stroke.transpose();
+        //     Eigen::Matrix<mp::cpp_int, -1, -1> B_stroke_transposed = B_stroke.transpose();
 
-        //     Eigen::Matrix<mp::cpp_int, Eigen::Dynamic, Eigen::Dynamic> B_double_stroke = HNF_full_row_rank(B_stroke);
+        //     Eigen::Matrix<mp::cpp_int, -1, -1> B_double_stroke = HNF_full_row_rank(B_stroke);
 
         //     return B_double_stroke;
         // }
@@ -162,7 +168,7 @@ namespace Algorithms
     // @param matrix input matrix
     // @param normalize indicates that should we or not normalize output values
     // @param delete_zero_rows indicates that should we or not delete zero rows
-    // Eigen::MatrixXd gram_schmidt(const Eigen::Matrix<cpp_int, Eigen::Dynamic, Eigen::Dynamic> &matrix, bool delete_zero_rows)
+    // Eigen::MatrixXd gram_schmidt(const Eigen::Matrix<cpp_int, -1, -1> &matrix, bool delete_zero_rows)
     // {
     //     std::vector<Eigen::VectorXd> basis;
 
