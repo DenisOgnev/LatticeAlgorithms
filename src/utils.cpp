@@ -38,13 +38,15 @@ namespace Utils
         mp::cpp_int g, x, y;
         std::tie(g, x, y) = gcd_result;
 
-        Eigen::Matrix<mp::cpp_rational, 2, 2> U;
+        Eigen::Matrix<mp::cpp_int, 2, 2> U;
         //U << static_cast<mp::cpp_bin_float_100>(x), static_cast<mp::cpp_bin_float_100>(-b) / static_cast<mp::cpp_bin_float_100>(g), static_cast<mp::cpp_bin_float_100>(y), static_cast<mp::cpp_bin_float_100>(a) / static_cast<mp::cpp_bin_float_100>(g);
-        U << x.convert_to<mp::cpp_rational>(), (-b).convert_to<mp::cpp_rational>() / g.convert_to<mp::cpp_rational>(), y.convert_to<mp::cpp_rational>(), a.convert_to<mp::cpp_rational>() / g.convert_to<mp::cpp_rational>();
+        U << x, -b / g, y, a / g;
+        
+
         Eigen::Matrix<mp::cpp_int, Eigen::Dynamic, Eigen::Dynamic> temp_matrix(H.rows(), 2);
         temp_matrix.col(0) = H_first_col;
         temp_matrix.col(1) = b_column;
-        Eigen::Matrix<mp::cpp_int, Eigen::Dynamic, Eigen::Dynamic> temp_result = (temp_matrix.cast<mp::cpp_rational>() * U).cast<mp::cpp_int>();
+        Eigen::Matrix<mp::cpp_int, Eigen::Dynamic, Eigen::Dynamic> temp_result = temp_matrix * U;
 
         Eigen::Vector<mp::cpp_int, Eigen::Dynamic> h_stroke = temp_result.col(0).tail(temp_result.rows() - 1);
         Eigen::Vector<mp::cpp_int, Eigen::Dynamic> b_double_stroke = temp_result.col(1).tail(temp_result.rows() - 1);
@@ -179,36 +181,27 @@ namespace Utils
 
     // Returns matrix that consist of linearly independent columns of input matrix, othogonalized matrix and indexes of that columns in input matrix
     // @param matrix input matrix
-    // @return std::tuple<Eigen::Matrix<cpp_int, Eigen::Dynamic, Eigen::Dynamic>, Eigen::MatrixXd, std::vector<int>>
-    std::tuple<Eigen::Matrix<mp::cpp_int, Eigen::Dynamic, Eigen::Dynamic>, Eigen::Matrix<mp::cpp_bin_float_100, Eigen::Dynamic, Eigen::Dynamic>, std::vector<int>> get_linearly_independent_columns_by_gram_schmidt(const Eigen::Matrix<mp::cpp_int, Eigen::Dynamic, Eigen::Dynamic> &matrix)
+    // @return std::tuple<Eigen::Matrix<cpp_int, Eigen::Dynamic, Eigen::Dynamic>, Eigen::Matrix<cpp_bin_float_100, Eigen::Dynamic, Eigen::Dynamic>, std::vector<int>>
+    std::tuple<Eigen::Matrix<mp::cpp_int, Eigen::Dynamic, Eigen::Dynamic>, Eigen::Matrix<mp::cpp_rational, Eigen::Dynamic, Eigen::Dynamic>, std::vector<int>> get_linearly_independent_columns_by_gram_schmidt(const Eigen::Matrix<mp::cpp_int, Eigen::Dynamic, Eigen::Dynamic> &matrix)
     {
-        std::vector<Eigen::Vector<mp::cpp_bin_float_100, Eigen::Dynamic>> basis;
+        std::vector<Eigen::Vector<mp::cpp_rational, Eigen::Dynamic>> basis;
         std::vector<int> indexes;
 
         int counter = 0;
-        for (const Eigen::Vector<mp::cpp_int, Eigen::Dynamic> &vec : matrix.colwise())
+        for (const Eigen::Vector<mp::cpp_rational, Eigen::Dynamic> &vec : matrix.cast<mp::cpp_rational>().colwise())
         {
-            Eigen::Vector<mp::cpp_bin_float_100, Eigen::Dynamic> projections = Eigen::Vector<mp::cpp_bin_float_100, Eigen::Dynamic>::Zero(vec.size());
-            
-            Eigen::Vector<mp::cpp_bin_float_100, Eigen::Dynamic> t_vec = vec.cast<mp::cpp_bin_float_100>();
+            Eigen::Vector<mp::cpp_rational, Eigen::Dynamic> projections = Eigen::Vector<mp::cpp_rational, Eigen::Dynamic>::Zero(vec.size());
 
             //#pragma omp parallel for
             for (int i = 0; i < basis.size(); i++)
             {
-                mp::cpp_bin_float_100 inner1 = std::inner_product(t_vec.data(), t_vec.data() + t_vec.size(), basis[i].data(), mp::cpp_bin_float_100(0.0));
-                mp::cpp_bin_float_100 inner2 = std::inner_product(basis[i].data(), basis[i].data() + basis[i].size(), basis[i].data(), mp::cpp_bin_float_100(0.0));
+                mp::cpp_rational inner1 = std::inner_product(vec.data(), vec.data() + vec.size(), basis[i].data(), mp::cpp_rational(0.0));
+                mp::cpp_rational inner2 = std::inner_product(basis[i].data(), basis[i].data() + basis[i].size(), basis[i].data(), mp::cpp_rational(0.0));
                 //#pragma omp critical
                 projections.noalias() += (inner1 / inner2) * basis[i];
             }
-            // NO PARALLEL
-            // for (const auto &b : basis)
-            // {
-            //     double inner1 = std::inner_product(vec.data(), vec.data() + vec.size(), b.data(), 0.0);
-            //     double inner2 = std::inner_product(b.data(), b.data() + b.size(), b.data(), 0.0);
-            //     projections.noalias() += (inner1 / inner2) * b;
-            // }
 
-            Eigen::Vector<mp::cpp_bin_float_100, Eigen::Dynamic> result = vec.cast<mp::cpp_bin_float_100>() - projections;
+            Eigen::Vector<mp::cpp_rational, Eigen::Dynamic> result = vec - projections;
 
             bool is_all_zero = result.isZero(1e-3);
             if (!is_all_zero)
@@ -220,7 +213,7 @@ namespace Utils
         }
 
         Eigen::Matrix<mp::cpp_int, Eigen::Dynamic, Eigen::Dynamic> result(matrix.rows(), indexes.size());
-        Eigen::Matrix<mp::cpp_bin_float_100, Eigen::Dynamic, Eigen::Dynamic> gram_schmidt(matrix.rows(), basis.size());
+        Eigen::Matrix<mp::cpp_rational, Eigen::Dynamic, Eigen::Dynamic> gram_schmidt(matrix.rows(), basis.size());
         //#pragma omp parallel for
         for (int i = 0; i < indexes.size(); i++)
         {
@@ -233,21 +226,23 @@ namespace Utils
     // Returns matrix that consist of linearly independent rows of input matrix and indexes of that rows in input matrix
     // @param matrix input matrix
     // @return std::tuple<Eigen::Matrix<cpp_int, Eigen::Dynamic, Eigen::Dynamic>, std::vector<int>>
-    // std::tuple<Eigen::Matrix<cpp_int, Eigen::Dynamic, Eigen::Dynamic>, std::vector<int>> get_linearly_independent_rows_by_gram_schmidt(const Eigen::Matrix<cpp_int, Eigen::Dynamic, Eigen::Dynamic> &matrix)
+    // std::tuple<Eigen::Matrix<mp::cpp_int, Eigen::Dynamic, Eigen::Dynamic>, std::vector<int>> get_linearly_independent_rows_by_gram_schmidt(const Eigen::Matrix<mp::cpp_int, Eigen::Dynamic, Eigen::Dynamic> &matrix)
     // {
-    //     std::vector<Eigen::VectorXd> basis;
+    //     std::vector<Eigen::Vector<mp::cpp_bin_float_100, Eigen::Dynamic>> basis;
     //     std::vector<int> indexes;
+    //     std::vector<mp::cpp_bin_float_100> uji;
 
     //     int counter = 0;
-    //     for (const Eigen::Vector<cpp_int, Eigen::Dynamic> &vec : matrix.rowwise())
+    //     for (const Eigen::Vector<mp::cpp_int, Eigen::Dynamic> &vec : matrix.rowwise())
     //     {
-    //         Eigen::VectorXd projections = Eigen::VectorXd::Zero(vec.size());
+    //         Eigen::Vector<mp::cpp_bin_float_100, Eigen::Dynamic> projections = Eigen::Vector<mp::cpp_bin_float_100, Eigen::Dynamic>::Zero(vec.size());
 
     //         //#pragma omp parallel for
     //         for (int i = 0; i < basis.size(); i++)
     //         {
-    //             double inner1 = std::inner_product(vec.data(), vec.data() + vec.size(), basis[i].data(), 0.0);
-    //             double inner2 = std::inner_product(basis[i].data(), basis[i].data() + basis[i].size(), basis[i].data(), 0.0);
+    //             mp::cpp_bin_float_100 inner1 = std::inner_product(vec.data(), vec.data() + vec.size(), basis[i].data(), 0.0);
+    //             mp::cpp_bin_float_100 inner2 = std::inner_product(basis[i].data(), basis[i].data() + basis[i].size(), basis[i].data(), 0.0);
+    //             uji.push_back(inner1 / inner2);
     //             projections.noalias() += (inner1 / inner2) * basis[i];
     //         }
     //         // NO PARALLEL
@@ -258,7 +253,7 @@ namespace Utils
     //         //     projections.noalias() += (inner1 / inner2) * b;
     //         // }
 
-    //         Eigen::VectorXd result = vec.cast<double>() - projections;
+    //         Eigen::Vector<mp::cpp_bin_float_100, Eigen::Dynamic> result = vec.cast<mp::cpp_bin_float_100>() - projections;
 
     //         bool is_all_zero = result.isZero(1e-3);
     //         if (!is_all_zero)
@@ -269,7 +264,7 @@ namespace Utils
     //         counter++;
     //     }
 
-    //     Eigen::Matrix<cpp_int, Eigen::Dynamic, Eigen::Dynamic> result(indexes.size(), matrix.cols());
+    //     Eigen::Matrix<mp::cpp_int, Eigen::Dynamic, Eigen::Dynamic> result(indexes.size(), matrix.cols());
     //     //#pragma omp parallel for
     //     for (int i = 0; i < indexes.size(); i++)
     //     {

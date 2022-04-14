@@ -32,19 +32,19 @@ namespace Algorithms
                 throw std::exception("Matrix is empty");
             }
 
-            std::tuple<Eigen::Matrix<mp::cpp_int, Eigen::Dynamic, Eigen::Dynamic>, Eigen::Matrix<mp::cpp_bin_float_100, Eigen::Dynamic, Eigen::Dynamic>, std::vector<int>> result_of_gs = Utils::get_linearly_independent_columns_by_gram_schmidt(B);
+            std::tuple<Eigen::Matrix<mp::cpp_int, Eigen::Dynamic, Eigen::Dynamic>, Eigen::Matrix<mp::cpp_rational, Eigen::Dynamic, Eigen::Dynamic>, std::vector<int>> result_of_gs = Utils::get_linearly_independent_columns_by_gram_schmidt(B);
             Eigen::Matrix<mp::cpp_int, Eigen::Dynamic, Eigen::Dynamic> B_stroke = std::get<0>(result_of_gs);
-            Eigen::Matrix<cpp_bin_float_100_et_off, Eigen::Dynamic, Eigen::Dynamic> ortogonalized = std::get<1>(result_of_gs);
+            Eigen::Matrix<mp::cpp_rational, Eigen::Dynamic, Eigen::Dynamic> ortogonalized = std::get<1>(result_of_gs);
             
-            mp::cpp_bin_float_100 det = 1.0;
-            for (const auto &vec : ortogonalized.colwise())
+            mp::cpp_rational t_det = 1.0;
+            for (const Eigen::Vector<mp::cpp_rational, -1> &vec : ortogonalized.colwise())
             {
-                det *= vec.norm();
+                t_det *= vec.squaredNorm();
             }
-            det = boost::multiprecision::round(det); // to avoid errors with static_cast
-            //std::cout << det << "\n";
+            mp::cpp_int det = mp::sqrt(mp::numerator(t_det));
+            std::cout << det << "\n";
 
-            Eigen::Matrix<mp::cpp_int, Eigen::Dynamic, Eigen::Dynamic> H_temp = Eigen::Matrix<mp::cpp_int, Eigen::Dynamic, Eigen::Dynamic>::Identity(m, m) * static_cast<mp::cpp_int>(det);
+            Eigen::Matrix<mp::cpp_int, Eigen::Dynamic, Eigen::Dynamic> H_temp = Eigen::Matrix<mp::cpp_int, Eigen::Dynamic, Eigen::Dynamic>::Identity(m, m) * det;
 
             for (int i = 0; i < n; i++)
             {
@@ -62,9 +62,9 @@ namespace Algorithms
         }
 
         // Computes HNF of an arbitrary matrix
-        // @return Eigen::MatrixXd
+        // @return Eigen::Matrix<cpp_int, Eigen::Dynamic, Eigen::Dynamic>
         // @param B arbitrary matrix
-        // Eigen::MatrixXd HNF(const Eigen::MatrixXd &B)
+        // Eigen::Matrix<mp::cpp_int, Eigen::Dynamic, Eigen::Dynamic> HNF(const Eigen::Matrix<mp::cpp_int, Eigen::Dynamic, Eigen::Dynamic> &B)
         // {
         //     int m = static_cast<int>(B.rows());
         //     int n = static_cast<int>(B.cols());
@@ -73,49 +73,20 @@ namespace Algorithms
         //     {
         //         throw std::invalid_argument("Matrix is not initialized");
         //     }
-        //     if (B.isZero(1e-3))
+        //     if (B.isZero())
         //     {
         //         throw std::exception("Matrix is empty");
         //     }
 
-        //     std::tuple<Eigen::MatrixXd, std::vector<int>> projection = Utils::get_linearly_independent_rows_by_gram_schmidt(B);
-        //     Eigen::MatrixXd B_stroke = std::get<0>(projection);
+        //     std::tuple<Eigen::Matrix<mp::cpp_int, Eigen::Dynamic, Eigen::Dynamic>, std::vector<int>> projection = Utils::get_linearly_independent_rows_by_gram_schmidt(B);
+        //     Eigen::Matrix<mp::cpp_int, Eigen::Dynamic, Eigen::Dynamic> B_stroke = std::get<0>(projection);
         //     std::vector<int> inds = std::get<1>(projection);
 
-        //     Eigen::MatrixXd B_stroke_transposed = B_stroke.transpose();
+        //     Eigen::Matrix<mp::cpp_int, Eigen::Dynamic, Eigen::Dynamic> B_stroke_transposed = B_stroke.transpose();
 
-        //     Eigen::MatrixXd B_double_stroke = HNF_full_row_rank(B_stroke);
+        //     Eigen::Matrix<mp::cpp_int, Eigen::Dynamic, Eigen::Dynamic> B_double_stroke = HNF_full_row_rank(B_stroke);
 
-        //     std::vector<Eigen::VectorXd> basis;
-        //     for (const Eigen::VectorXd &vec : B_double_stroke.rowwise())
-        //     {
-        //         basis.push_back(vec);
-        //     }
-
-        //     int counter = 0;
-        //     for (const Eigen::VectorXd &vec : B.rowwise())
-        //     {
-        //         if (std::find(inds.begin(), inds.end(), counter) == inds.end())
-        //         {
-        //             Eigen::VectorXd x = B_stroke_transposed.colPivHouseholderQr().solve(vec);
-
-        //             Eigen::VectorXd result = Eigen::VectorXd::Zero(x.rows());
-        //             int second_counter = 0;
-        //             for (const Eigen::VectorXd &HNF_vec : B_double_stroke.rowwise())
-        //             {
-        //                 result += HNF_vec * x(second_counter);
-        //                 second_counter++;
-        //             }
-        //             basis.push_back(result);
-        //         }
-        //         counter++;
-        //     }
-        //     Eigen::MatrixXd result(basis.size(), basis[0].rows());
-        //     for (int i = 0; i < basis.size(); i++)
-        //     {
-        //         result.row(i) = basis[i];
-        //     }
-        //     return result;
+        //     return B_double_stroke;
         // }
     }
     namespace CVP
