@@ -218,55 +218,66 @@ namespace Utils
         return std::make_tuple(result, gram_schmidt);
     }
 
-    // Returns matrix that consist of linearly independent rows of input matrix and indexes of that rows in input matrix
+    // Returns matrix that consist of linearly independent rows of input matrix and indicies of that rows in input matrix
     // @param matrix input matrix
     // @return std::tuple<Eigen::Matrix<cpp_int, -1, -1>, std::vector<int>>
-    // std::tuple<Eigen::Matrix<mp::cpp_int, -1, -1>, std::vector<int>> get_linearly_independent_rows_by_gram_schmidt(const Eigen::Matrix<mp::cpp_int, -1, -1> &matrix)
-    // {
-    //     std::vector<Eigen::Vector<mp::cpp_bin_float_100, -1>> basis;
-    //     std::vector<int> indexes;
-    //     std::vector<mp::cpp_bin_float_100> uji;
+    std::tuple<Eigen::Matrix<mp::cpp_int, -1, -1>, std::vector<int>, std::vector<int>, Eigen::Matrix<mp::cpp_rational, -1, -1>> get_linearly_independent_rows_by_gram_schmidt(const Eigen::Matrix<mp::cpp_int, -1, -1> &matrix)
+    {
+        std::vector<Eigen::Vector<mp::cpp_rational, -1>> basis;
+        std::vector<int> indicies;
+	    std::vector<int> deleted_indicies;
+        Eigen::Matrix<mp::cpp_rational, -1, -1> T = Eigen::Matrix<mp::cpp_rational, -1, -1>::Identity(matrix.rows(), matrix.rows());
 
-    //     int counter = 0;
-    //     for (const Eigen::Vector<mp::cpp_int, -1> &vec : matrix.rowwise())
-    //     {
-    //         Eigen::Vector<mp::cpp_bin_float_100, -1> projections = Eigen::Vector<mp::cpp_bin_float_100, -1>::Zero(vec.size());
+        int counter = 0;
+        for (const Eigen::Vector<mp::cpp_rational, -1> &vec : matrix.cast<mp::cpp_rational>().rowwise())
+        {
+            Eigen::Vector<mp::cpp_rational, -1> projections = Eigen::Vector<mp::cpp_rational, -1>::Zero(vec.size());
+            for (int i = 0; i < basis.size(); i++)
+            {
+                mp::cpp_rational inner1;
+                mp::cpp_rational inner2;
+                #pragma omp parallel sections
+                {
+                    #pragma omp section
+                    {
+                        inner1 = std::inner_product(vec.data(), vec.data() + vec.size(), basis[i].data(), mp::cpp_rational(0.0));
+                    }
+                    #pragma omp section
+                    {
+                        inner2 = std::inner_product(basis[i].data(), basis[i].data() + basis[i].size(), basis[i].data(), mp::cpp_rational(0.0));
+                    }
+                }
+                mp::cpp_rational u_ij = 0;
+                if (!inner1.is_zero())
+                {
+                    u_ij = inner1 / inner2;
+                    projections.noalias() += (u_ij)*basis[i];
+                    T(counter, i) = u_ij;
+                }
+            }
 
-    //         //#pragma omp parallel for
-    //         for (int i = 0; i < basis.size(); i++)
-    //         {
-    //             mp::cpp_bin_float_100 inner1 = std::inner_product(vec.data(), vec.data() + vec.size(), basis[i].data(), 0.0);
-    //             mp::cpp_bin_float_100 inner2 = std::inner_product(basis[i].data(), basis[i].data() + basis[i].size(), basis[i].data(), 0.0);
-    //             uji.push_back(inner1 / inner2);
-    //             projections.noalias() += (inner1 / inner2) * basis[i];
-    //         }
-    //         // NO PARALLEL
-    //         // for (const auto &b : basis)
-    //         // {
-    //         //     double inner1 = std::inner_product(vec.data(), vec.data() + vec.size(), b.data(), 0.0);
-    //         //     double inner2 = std::inner_product(b.data(), b.data() + b.size(), b.data(), 0.0);
-    //         //     projections.noalias() += (inner1 / inner2) * b;
-    //         // }
+            Eigen::Vector<mp::cpp_rational, -1> result = vec - projections;
 
-    //         Eigen::Vector<mp::cpp_bin_float_100, -1> result = vec.cast<mp::cpp_bin_float_100>() - projections;
+            bool is_all_zero = result.isZero(1e-3);
+            if (!is_all_zero)
+            {
+                indicies.push_back(counter);
+            }
+            else
+            {
+                deleted_indicies.push_back(counter);
+            }
+            basis.push_back(result);
+            counter++;
+        }
 
-    //         bool is_all_zero = result.isZero(1e-3);
-    //         if (!is_all_zero)
-    //         {
-    //             basis.push_back(result);
-    //             indexes.push_back(counter);
-    //         }
-    //         counter++;
-    //     }
-
-    //     Eigen::Matrix<mp::cpp_int, -1, -1> result(indexes.size(), matrix.cols());
-    //     //#pragma omp parallel for
-    //     for (int i = 0; i < indexes.size(); i++)
-    //     {
-    //         result.row(i) = matrix.row(indexes[i]);
-    //     }
-    //     return std::make_tuple(result, indexes);
-    // }
+        Eigen::Matrix<mp::cpp_int, -1, -1> result(indicies.size(), matrix.cols());
+        for (int i = 0; i < indicies.size(); i++)
+        {
+            result.row(i) = matrix.row(indicies[i]);
+        }
+        return std::make_tuple(result, indicies, deleted_indicies, T);
+    }
 
     // Computes determinant by using Gram Schmidt orthogonalization
     // @return double

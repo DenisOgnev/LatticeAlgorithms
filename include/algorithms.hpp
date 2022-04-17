@@ -9,7 +9,7 @@ namespace Algorithms
     namespace HNF
     {
         Eigen::Matrix<boost::multiprecision::cpp_int, -1, -1> HNF_full_row_rank(const Eigen::Matrix<boost::multiprecision::cpp_int, -1, -1> &B);
-        Eigen::MatrixXd HNF(const Eigen::MatrixXd &B);
+        Eigen::Matrix<boost::multiprecision::cpp_int, -1, -1> HNF(const Eigen::Matrix<boost::multiprecision::cpp_int, -1, -1> &B);
     }
     namespace CVP
     {
