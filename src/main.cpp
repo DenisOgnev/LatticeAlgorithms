@@ -71,8 +71,8 @@ std::tuple<Eigen::Matrix<mp::cpp_int, -1, -1>, std::vector<int>, std::vector<int
 
 int main()
 {
-	Eigen::Matrix<boost::multiprecision::cpp_int, -1, -1> mat = Utils::generate_random_matrix(50, 50, 1, 10);
-	Eigen::Matrix<boost::multiprecision::cpp_int, -1, -1> mat2 = Utils::generate_random_matrix_with_full_row_rank(50, 50, 1, 10);
+	Eigen::Matrix<boost::multiprecision::cpp_int, -1, -1> mat = Utils::generate_random_matrix(25, 25, 1, 10);
+	Eigen::Matrix<boost::multiprecision::cpp_int, -1, -1> mat2 = Utils::generate_random_matrix_with_full_row_rank(25, 25, 1, 10);
 	// mat << 2, 1, 2, 2, 2,
 	// 	2, 1, 1, 2, 1,
 	// 	2, 1, 1, 2, 2,
@@ -87,59 +87,6 @@ int main()
 	Eigen::Matrix<boost::multiprecision::cpp_int, -1, -1> HNF2 = Algorithms::HNF::HNF_full_row_rank(mat2);
 	end_time = omp_get_wtime();
 	std::cout << end_time - start_time << "\n";
-	// std::cout << HNF.transpose() << "\n\n";
-
-	// std::tuple<Eigen::Matrix<mp::cpp_int, -1, -1>, std::vector<int>, std::vector<int>, Eigen::Matrix<mp::cpp_rational, -1, -1>> gs_res = gs(mat);
-	// Eigen::Matrix<mp::cpp_int, -1, -1> B_stroke = std::get<0>(gs_res);
-	// std::vector<int> deleted_inds = std::get<1>(gs_res);
-	// std::vector<int> inds = std::get<2>(gs_res);
-	// Eigen::Matrix<mp::cpp_rational, -1, -1> T = std::get<3>(gs_res);
-
-	// Eigen::Matrix<mp::cpp_int, -1, -1> HNF = Algorithms::HNF::HNF(B_stroke);
-
-	// std::cout << mat.transpose() << "\n\n";
-
-	// std::cout << HNF << "\n\n";
-
-	// Eigen::Matrix<mp::cpp_int, -1, -1> res_HNF(mat.rows(), mat.cols());
-
-	// for (int i = 0; i < inds.size(); i++)
-	// {
-	// 	res_HNF.row(inds[i]) = HNF.row(i);
-	// }
-
-	// Eigen::Matrix<mp::cpp_bin_float_double, -1, -1> t_res_HNF = res_HNF.cast<mp::cpp_bin_float_double>();
-
-	// Eigen::Matrix<mp::cpp_bin_float_double, -1, -1> B_stroke_transposed = B_stroke.transpose().cast<mp::cpp_bin_float_double>();
-	// auto QR = B_stroke.cast<mp::cpp_bin_float_double>().colPivHouseholderQr().transpose();
-
-	// for (const auto &indx : deleted_inds)
-	// {
-	// 	Eigen::Vector<mp::cpp_bin_float_double, -1> vec = mat.row(indx).cast<mp::cpp_bin_float_double>();
-	// 	Eigen::RowVector<mp::cpp_bin_float_double, -1> x = QR.solve(vec);
-
-	// 	Eigen::Vector<mp::cpp_bin_float_double, -1> res = x * HNF.cast<mp::cpp_bin_float_double>();
-	// 	for (mp::cpp_bin_float_double &elem : res)
-	// 	{
-	// 		elem = mp::round(elem);
-	// 	}
-	// 	res_HNF.row(indx) = res.cast<mp::cpp_int>();
-	// }
-
-	// std::cout << res_HNF.transpose() << "\n\n";
-
-	// for (const auto &indx : deleted_inds)
-	// {
-	// 	Eigen::Vector<mp::cpp_bin_float_double, -1> res = Eigen::Vector<mp::cpp_bin_float_double, -1>::Zero(mat.cols());
-	// 	for (int i = 0; i < indx; i++)
-	// 	{
-	// 		res += T(indx, i).convert_to<mp::cpp_bin_float_double>() * t_res_HNF.row(i);
-	// 	}
-
-	// 	t_res_HNF.row(indx) = res;
-	// }
-
-	// std::cout << t_res_HNF.transpose() << "\n\n";
 
 	return 0;
 }

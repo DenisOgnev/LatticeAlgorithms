@@ -45,7 +45,6 @@ namespace Algorithms
                 t_det *= vec.squaredNorm();
             }
             mp::cpp_int det = mp::sqrt(mp::numerator(t_det));
-            //std::cout << det << "\n";
 
             Eigen::Matrix<mp::cpp_int, -1, -1> H_temp = Eigen::Matrix<mp::cpp_int, -1, -1>::Identity(m, m) * det;
 
@@ -97,37 +96,39 @@ namespace Algorithms
                 HNF.row(indicies[i]) = B_double_stroke.row(i);
             }
 
-            // Eigen::Matrix<mp::cpp_bin_float_double, -1, -1> t_HNF = HNF.cast<mp::cpp_bin_float_double>(); // for other way
+            Eigen::Matrix<mp::cpp_bin_float_double, -1, -1> t_HNF = HNF.cast<mp::cpp_bin_float_double>(); // for other way
 
-            Eigen::Matrix<mp::cpp_bin_float_double, -1, -1> B_stroke_transposed = B_stroke.transpose().cast<mp::cpp_bin_float_double>();
-            auto QR = B_stroke.cast<mp::cpp_bin_float_double>().colPivHouseholderQr().transpose();
+            // First way, just find linear combinations of deleted rows, more accurate
+            // Eigen::Matrix<mp::cpp_bin_float_double, -1, -1> B_stroke_transposed = B_stroke.transpose().cast<mp::cpp_bin_float_double>();
+            // auto QR = B_stroke.cast<mp::cpp_bin_float_double>().colPivHouseholderQr().transpose();
 
-            for (const auto &indx : deleted_indicies)
-            {
-                Eigen::Vector<mp::cpp_bin_float_double, -1> vec = B.row(indx).cast<mp::cpp_bin_float_double>();
-                Eigen::RowVector<mp::cpp_bin_float_double, -1> x = QR.solve(vec);
-
-                Eigen::Vector<mp::cpp_bin_float_double, -1> res = x * HNF.cast<mp::cpp_bin_float_double>();
-                for (mp::cpp_bin_float_double &elem : res) 
-                {
-                    elem = mp::round(elem);
-                }
-                HNF.row(indx) = res.cast<mp::cpp_int>();
-            }
-
-            // Other, the "right" way, numeric +- correct
             // for (const auto &indx : deleted_indicies)
             // {
-            //     Eigen::Vector<mp::cpp_bin_float_double, -1> res = Eigen::Vector<mp::cpp_bin_float_double, -1>::Zero(B.cols());
-            //     for (int i = 0; i < indx; i++)
-            //     {
-            //         res += T(indx, i).convert_to<mp::cpp_bin_float_double>() * t_HNF.row(i);
-            //     }
-                
-            //     t_HNF.row(indx) = res;
-            // }
+            //     Eigen::Vector<mp::cpp_bin_float_double, -1> vec = B.row(indx).cast<mp::cpp_bin_float_double>();
+            //     Eigen::RowVector<mp::cpp_bin_float_double, -1> x = QR.solve(vec);
 
-            return HNF;
+            //     Eigen::Vector<mp::cpp_bin_float_double, -1> res = x * HNF.cast<mp::cpp_bin_float_double>();
+            //     for (mp::cpp_bin_float_double &elem : res) 
+            //     {
+            //         elem = mp::round(elem);
+            //     }
+            //     HNF.row(indx) = res.cast<mp::cpp_int>();
+            // }
+            // return HNF;
+
+            // Other, the "right" way, numerical errors +-2 
+            for (const auto &indx : deleted_indicies)
+            {
+                Eigen::Vector<mp::cpp_bin_float_double, -1> res = Eigen::Vector<mp::cpp_bin_float_double, -1>::Zero(B.cols());
+                for (int i = 0; i < indx; i++)
+                {
+                    res += T(indx, i).convert_to<mp::cpp_bin_float_double>() * t_HNF.row(i);
+                }
+                
+                t_HNF.row(indx) = res;
+            }
+
+            return t_HNF.cast<mp::cpp_int>();
         }
     }
     namespace CVP

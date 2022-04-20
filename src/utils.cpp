@@ -39,7 +39,6 @@ namespace Utils
         std::tie(g, x, y) = gcd_result;
 
         Eigen::Matrix<mp::cpp_int, 2, 2> U;
-        //U << static_cast<mp::cpp_bin_float_100>(x), static_cast<mp::cpp_bin_float_100>(-b) / static_cast<mp::cpp_bin_float_100>(g), static_cast<mp::cpp_bin_float_100>(y), static_cast<mp::cpp_bin_float_100>(a) / static_cast<mp::cpp_bin_float_100>(g);
         U << x, -b / g, y, a / g;
         
 
@@ -90,7 +89,7 @@ namespace Utils
                 x = (t_vec_elem - (t_matrix_elem - 1)) / t_matrix_elem;
             }
 
-            result.noalias() -= matrix_column * x;
+            result -= matrix_column * x;
         }
         return result;
     }
@@ -193,7 +192,8 @@ namespace Utils
                         inner2 = std::inner_product(basis_vector.data(), basis_vector.data() + basis_vector.size(), basis_vector.data(), mp::cpp_rational(0.0));
                     }
                 }
-                projections.noalias() += (inner1 / inner2) * basis_vector;
+                mp::cpp_rational coef = inner1 / inner2;
+                projections += basis_vector * coef;
             }
 
             Eigen::Vector<mp::cpp_rational, -1> result = vec - projections;
@@ -209,7 +209,7 @@ namespace Utils
 
         Eigen::Matrix<mp::cpp_int, -1, -1> result(matrix.rows(), indexes.size());
         Eigen::Matrix<mp::cpp_rational, -1, -1> gram_schmidt(matrix.rows(), basis.size());
-        #pragma omp parallel for
+        
         for (int i = 0; i < indexes.size(); i++)
         {
             result.col(i) = matrix.col(indexes[i]);
@@ -234,24 +234,25 @@ namespace Utils
             Eigen::Vector<mp::cpp_rational, -1> projections = Eigen::Vector<mp::cpp_rational, -1>::Zero(vec.size());
             for (int i = 0; i < basis.size(); i++)
             {
+                Eigen::Vector<mp::cpp_rational, -1> basis_vector = basis[i];
                 mp::cpp_rational inner1;
                 mp::cpp_rational inner2;
                 #pragma omp parallel sections
                 {
                     #pragma omp section
                     {
-                        inner1 = std::inner_product(vec.data(), vec.data() + vec.size(), basis[i].data(), mp::cpp_rational(0.0));
+                        inner1 = std::inner_product(vec.data(), vec.data() + vec.size(), basis_vector.data(), mp::cpp_rational(0.0));
                     }
                     #pragma omp section
                     {
-                        inner2 = std::inner_product(basis[i].data(), basis[i].data() + basis[i].size(), basis[i].data(), mp::cpp_rational(0.0));
+                        inner2 = std::inner_product(basis_vector.data(), basis_vector.data() + basis_vector.size(), basis_vector.data(), mp::cpp_rational(0.0));
                     }
                 }
                 mp::cpp_rational u_ij = 0;
                 if (!inner1.is_zero())
                 {
                     u_ij = inner1 / inner2;
-                    projections.noalias() += (u_ij)*basis[i];
+                    projections += u_ij * basis_vector;
                     T(counter, i) = u_ij;
                 }
             }
