@@ -133,19 +133,31 @@ namespace Algorithms
     }
     namespace CVP
     {
+        bool first_time = true;
+        Eigen::MatrixXd gram_schmidt;
+        int index;
         Eigen::VectorXd greedy(const Eigen::MatrixXd &matrix, const Eigen::VectorXd &target)
         {
             if (matrix.rows() == 0)
             {
+                first_time = true;
                 return Eigen::VectorXd::Zero(matrix.cols());
             }
+            if (first_time)
+            {
+                first_time = false;
+                gram_schmidt = Algorithms::gram_schmidt(matrix, false);
+                index = matrix.cols() - 1;
+            }
             Eigen::VectorXd b = matrix.row(matrix.rows() - 1);
-            Eigen::MatrixXd mat = matrix.block(0, 0, matrix.rows() - 1, matrix.cols());
-            Eigen::VectorXd b_star = Utils::projection(mat, b);
+            Eigen::MatrixXd B = matrix.block(0, 0, matrix.rows() - 1, matrix.cols());
+            //Eigen::VectorXd b_star = Utils::projection(B, b);
+            Eigen::VectorXd b_star = gram_schmidt.col(index);
+            index--;
             double x = target.dot(b_star) / b_star.dot(b_star);
             double c = round(x);
 
-            return c * b + Algorithms::CVP::greedy(mat, target - c * b);
+            return c * b + Algorithms::CVP::greedy(B, target - c * b);
         }
 
         Eigen::VectorXd branch_and_bound(const Eigen::MatrixXd &matrix, const Eigen::VectorXd &target)
@@ -204,51 +216,56 @@ namespace Algorithms
     // @param matrix input matrix
     // @param normalize indicates that should we or not normalize output values
     // @param delete_zero_rows indicates that should we or not delete zero rows
-    // Eigen::MatrixXd gram_schmidt(const Eigen::Matrix<cpp_int, -1, -1> &matrix, bool delete_zero_rows)
-    // {
-    //     std::vector<Eigen::VectorXd> basis;
+    Eigen::MatrixXd gram_schmidt(const Eigen::MatrixXd &matrix, bool delete_zero_rows)
+    {
+        std::vector<Eigen::VectorXd> basis;
 
-    //     for (const auto &vec : matrix.colwise())
-    //     {
-    //         Eigen::VectorXd projections = Eigen::VectorXd::Zero(vec.size());
+        for (const auto &vec : matrix.colwise())
+        {
+            Eigen::VectorXd projections = Eigen::VectorXd::Zero(vec.size());
 
-    //         //#pragma omp parallel for
-    //         for (int i = 0; i < basis.size(); i++)
-    //         {
-    //             double inner1 = std::inner_product(vec.data(), vec.data() + vec.size(), basis[i].data(), 0.0);
-    //             double inner2 = std::inner_product(basis[i].data(), basis[i].data() + basis[i].size(), basis[i].data(), 0.0);
-    //             projections.noalias() += (inner1 / inner2) * basis[i];
-    //         }
-    //         // NO PARALLEL
-    //         // for (const auto &b : basis)
-    //         // {
-    //         //     double inner1 = std::inner_product(vec.data(), vec.data() + vec.size(), b.data(), 0.0);
-    //         //     double inner2 = std::inner_product(b.data(), b.data() + b.size(), b.data(), 0.0);
-    //         //     projections.noalias() += (inner1 / inner2) * b;
-    //         // }
+            #pragma omp parallel for
+            for (int i = 0; i < basis.size(); i++)
+            {
+                double inner1;
+                double inner2;
+                Eigen::MatrixXd basis_vector = basis[i];
+                #pragma omp parallel sections
+                {
+                    #pragma omp section
+                    {
+                        inner1 = std::inner_product(vec.data(), vec.data() + vec.size(), basis_vector.data(), 0.0);
+                    }
+                    #pragma omp section
+                    {
+                        inner2 = std::inner_product(basis_vector.data(), basis_vector.data() + basis_vector.size(), basis_vector.data(), 0.0);
+                    }
+                }
+                projections.noalias() += (inner1 / inner2) * basis_vector;
+            }
 
-    //         Eigen::VectorXd result = vec.cast<double>() - projections;
+            Eigen::VectorXd result = vec.cast<double>() - projections;
 
-    //         if (delete_zero_rows)
-    //         {
-    //             bool is_all_zero = result.isZero(1e-3);
-    //             if (!is_all_zero)
-    //             {
-    //                 basis.push_back(result);
-    //             }
-    //         }
-    //         else
-    //         {
-    //             basis.push_back(result);
-    //         }
-    //     }
+            if (delete_zero_rows)
+            {
+                bool is_all_zero = result.isZero(1e-3);
+                if (!is_all_zero)
+                {
+                    basis.push_back(result);
+                }
+            }
+            else
+            {
+                basis.push_back(result);
+            }
+        }
 
-    //     Eigen::MatrixXd result(matrix.rows(), basis.size());
-    //     //#pragma omp parallel for
-    //     for (int i = 0; i < basis.size(); i++)
-    //     {
-    //         result.col(i) = basis[i];
-    //     }
-    //     return result;
-    // }
+        Eigen::MatrixXd result(matrix.rows(), basis.size());
+
+        for (int i = 0; i < basis.size(); i++)
+        {
+            result.col(i) = basis[i];
+        }
+        return result;
+    }
 }
