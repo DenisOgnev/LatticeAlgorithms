@@ -387,29 +387,50 @@ namespace Utils
 
     Eigen::VectorXd projection(const Eigen::MatrixXd &matrix, const Eigen::VectorXd &vector)
     {
-        Eigen::VectorXd projection = Eigen::VectorXd::Zero(vector.rows());
+        Eigen::MatrixXd t_matrix(matrix.rows(), matrix.cols() + 1);
+        t_matrix << matrix, vector;
+        std::vector<Eigen::VectorXd> basis;
 
-        for (const Eigen::VectorXd &matrix_row : matrix.rowwise())
+        for (const Eigen::VectorXd &vec : t_matrix.colwise())
         {
-            projection += (vector.dot(matrix_row) / matrix_row.dot(matrix_row)) * matrix_row;
+            Eigen::VectorXd projections = Eigen::VectorXd::Zero(vec.size());
+
+            for (int i = 0; i < basis.size(); i++)
+            {
+                Eigen::VectorXd basis_vector = basis[i];
+                double inner1;
+                double inner2;
+                #pragma omp parallel sections
+                {
+                    #pragma omp section
+                    {
+                        inner1 = std::inner_product(vec.data(), vec.data() + vec.size(), basis_vector.data(), 0.0);
+                    }
+                    #pragma omp section
+                    {
+                        inner2 = std::inner_product(basis_vector.data(), basis_vector.data() + basis_vector.size(), basis_vector.data(), 0.0);
+                    }
+                }
+                double coef = inner1 / inner2;
+                projections += basis_vector * coef;
+            }
+
+            Eigen::VectorXd t_result = vec - projections;
+
+            basis.push_back(t_result);
         }
 
-        Eigen::VectorXd result = vector - projection;
+        Eigen::VectorXd result = basis.back();
 
         return result;
-    }
-
-    double distance_between_two_vectors(const Eigen::VectorXd &vector1, const Eigen::VectorXd &vector2)
-    {
-        return (vector1 - vector2).norm();
     }
 
     Eigen::VectorXd closest_vector(const std::vector<Eigen::VectorXd> &matrix, const Eigen::VectorXd &vector)
     {
         Eigen::VectorXd closest = matrix[0];
-        for (auto const &v : matrix)
+        for (const auto &v : matrix)
         {
-            if (distance_between_two_vectors(vector, v) <= distance_between_two_vectors(vector, closest))
+            if ((vector - v).norm() <= (vector - closest).norm())
             {
                 closest = v;
             }

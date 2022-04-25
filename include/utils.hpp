@@ -20,7 +20,6 @@ namespace Utils
     Eigen::MatrixXd generate_random_matrix_with_linearly_independent_rows(const int m, const int n, double lowest, double highest);
     Eigen::ArrayXd generate_random_array(const int m, double lowest, double highest);
     Eigen::VectorXd projection(const Eigen::MatrixXd &matrix, const Eigen::VectorXd &vector);
-    double distance_between_two_vectors(const Eigen::VectorXd &vector1, const Eigen::VectorXd &vector2);
     Eigen::VectorXd closest_vector(const std::vector<Eigen::VectorXd> &matrix, const Eigen::VectorXd &vector);
 }
 

@@ -196,53 +196,57 @@ namespace Algorithms
 
         Eigen::VectorXd branch_and_bound(const Eigen::MatrixXd &matrix, const Eigen::VectorXd &target)
         {
-            if (matrix.rows() == 0)
+            if (matrix.cols() == 0)
             {
-                return Eigen::VectorXd::Zero(matrix.cols());
+                return Eigen::VectorXd::Zero(matrix.rows());
             }
-            Eigen::VectorXd b = matrix.row(matrix.rows() - 1);
-            Eigen::MatrixXd B = matrix.block(0, 0, matrix.rows() - 1, matrix.cols());
+            Eigen::VectorXd b = matrix.col(matrix.cols() - 1);
+            Eigen::MatrixXd B = matrix.block(0, 0, matrix.rows(), matrix.cols() - 1);
             Eigen::VectorXd b_star = Utils::projection(B, b);
             Eigen::VectorXd v = Algorithms::CVP::greedy(B, target);
 
             double upper_bound = (target - v).norm();
             double x_middle = std::floor(target.dot(b_star) / b_star.dot(b_star));
-            double lower_bound = Utils::projection(B, target - x_middle * b).norm();
+            //double lower_bound = Utils::projection(B, target - x_middle * b).norm();
 
             double x = x_middle;
-            double temp_lower_bound = lower_bound;
-            while (temp_lower_bound <= upper_bound)
+            //double temp_lower_bound = lower_bound;
+            std::vector<int> X;
+            while (Utils::projection(B, target - x * b).norm() <= upper_bound)
             {
+                X.push_back(static_cast<int>(x));
                 x += 1;
-                temp_lower_bound = Utils::projection(B, target - x * b).norm();
+                //temp_lower_bound = Utils::projection(B, target - x * b).norm();
             }
-            double x_highest = x;
+            //double x_highest = x;
 
             x = x_middle;
-            temp_lower_bound = lower_bound;
-            while (temp_lower_bound <= upper_bound)
+            //temp_lower_bound = lower_bound;
+            while (Utils::projection(B, target - x * b).norm() <= upper_bound)
             {
+                X.push_back(static_cast<int>(x));
                 x -= 1;
-                temp_lower_bound = Utils::projection(B, target - x * b).norm();
+                //temp_lower_bound = Utils::projection(B, target - x * b).norm();
             }
-            double x_lowest = x + 1;
+            // double x_lowest = x + 1;
+            //double x_lowest = x;
 
-            std::vector<int> x_array;
-            for (int i =  static_cast<int>(x_lowest); i < x_highest; i++)
-            {
-                x_array.push_back(i);
-            }
-            if (x_array.size() == 0)
-            {
-                x_array.push_back(static_cast<int>(x_middle));
-            }
-            std::vector<Eigen::VectorXd> v_array;
-            for (auto const &elem : x_array)
+            // for (int i = static_cast<int>(x_lowest); i < x_highest; i++)
+            // {
+            //     X.push_back(i);
+            // }
+            // if (X.size() == 0)
+            // {
+            //     X.push_back(static_cast<int>(x_middle));
+            // }
+            std::vector<Eigen::VectorXd> V;
+            V.push_back(v);
+            for (const int &elem : X)
             {
                 Eigen::VectorXd res = elem * b + Algorithms::CVP::branch_and_bound(B, target - elem * b);
-                v_array.push_back(res);
+                V.push_back(res);
             }
-            return Utils::closest_vector(v_array, target);
+            return Utils::closest_vector(V, target);
         }
 
         // Eigen::VectorXd branch_and_bound(const Eigen::MatrixXd &matrix, const Eigen::VectorXd &target)
