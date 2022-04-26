@@ -159,25 +159,22 @@ namespace Algorithms
 
         //     return c * b + Algorithms::CVP::greedy(B, target - c * b);
         // }
-        Eigen::MatrixXd gram_schmidt;
-        Eigen::MatrixXd B;
-        int index;
+        Eigen::MatrixXd gram_schmidt_greedy;
+        Eigen::MatrixXd B_greedy;
+        int index_greedy;
+
+        Eigen::MatrixXd gram_schmidt_bb;
 
         Eigen::VectorXd greedy_recursive(const Eigen::VectorXd &target)
         {
-            if (index == 0)
+            if (index_greedy == 0)
             {
                 return Eigen::VectorXd::Zero(target.rows());
             }
-            index--;
-            Eigen::VectorXd b = B.col(index);
-            Eigen::VectorXd b_star = gram_schmidt.col(index);
+            index_greedy--;
+            Eigen::VectorXd b = B_greedy.col(index_greedy);
+            Eigen::VectorXd b_star = gram_schmidt_greedy.col(index_greedy);
             double x = target.dot(b_star) / b_star.dot(b_star);
-            if (b_star.isZero(1e-3))
-            {
-                b_star = b;
-                x = target.dot(b_star);
-            }
             double c = round(x);
 
             return c * b + Algorithms::CVP::greedy_recursive(target - c * b);
@@ -185,68 +182,56 @@ namespace Algorithms
 
         Eigen::VectorXd greedy(const Eigen::MatrixXd &matrix, const Eigen::VectorXd &target)
         {
-            B = matrix;
-            gram_schmidt = Algorithms::gram_schmidt(matrix, false);
-            index = static_cast<int>(matrix.cols());
-            
-            Eigen::VectorXd result = greedy_recursive(target);
+            B_greedy = matrix;
+            gram_schmidt_greedy = Algorithms::gram_schmidt(matrix, false);
+            index_greedy = static_cast<int>(matrix.cols());
 
-            return result;
+            return greedy_recursive(target);
         }
 
-        Eigen::VectorXd branch_and_bound(const Eigen::MatrixXd &matrix, const Eigen::VectorXd &target)
+        Eigen::VectorXd branch_and_bound_recursive(const Eigen::MatrixXd &matrix, const Eigen::VectorXd &target)
         {
             if (matrix.cols() == 0)
             {
                 return Eigen::VectorXd::Zero(matrix.rows());
             }
-            Eigen::VectorXd b = matrix.col(matrix.cols() - 1);
             Eigen::MatrixXd B = matrix.block(0, 0, matrix.rows(), matrix.cols() - 1);
-            Eigen::VectorXd b_star = Utils::projection(B, b);
+            Eigen::VectorXd b = matrix.col(matrix.cols() - 1);
+            Eigen::VectorXd b_star = gram_schmidt_bb.col(matrix.cols() - 1);
             Eigen::VectorXd v = Algorithms::CVP::greedy(B, target);
 
             double upper_bound = (target - v).norm();
-            double x_middle = std::floor(target.dot(b_star) / b_star.dot(b_star));
-            //double lower_bound = Utils::projection(B, target - x_middle * b).norm();
+            double x_middle = std::round(target.dot(b_star) / b_star.dot(b_star));
 
-            double x = x_middle;
-            //double temp_lower_bound = lower_bound;
             std::vector<int> X;
+            X.push_back(static_cast<int>(x_middle));
+            double x = x_middle + 1;
             while (Utils::projection(B, target - x * b).norm() <= upper_bound)
             {
                 X.push_back(static_cast<int>(x));
-                x += 1;
-                //temp_lower_bound = Utils::projection(B, target - x * b).norm();
+                x++;
             }
-            //double x_highest = x;
 
-            x = x_middle;
-            //temp_lower_bound = lower_bound;
+            x = x_middle - 1;
             while (Utils::projection(B, target - x * b).norm() <= upper_bound)
             {
                 X.push_back(static_cast<int>(x));
-                x -= 1;
-                //temp_lower_bound = Utils::projection(B, target - x * b).norm();
+                x--;
             }
-            // double x_lowest = x + 1;
-            //double x_lowest = x;
-
-            // for (int i = static_cast<int>(x_lowest); i < x_highest; i++)
-            // {
-            //     X.push_back(i);
-            // }
-            // if (X.size() == 0)
-            // {
-            //     X.push_back(static_cast<int>(x_middle));
-            // }
             std::vector<Eigen::VectorXd> V;
-            V.push_back(v);
             for (const int &elem : X)
             {
                 Eigen::VectorXd res = elem * b + Algorithms::CVP::branch_and_bound(B, target - elem * b);
                 V.push_back(res);
             }
             return Utils::closest_vector(V, target);
+        }
+
+        Eigen::VectorXd branch_and_bound(const Eigen::MatrixXd &matrix, const Eigen::VectorXd &target)
+        {
+            gram_schmidt_bb = Algorithms::gram_schmidt(matrix, false);
+
+            return branch_and_bound_recursive(matrix, target);
         }
 
         // Eigen::VectorXd branch_and_bound(const Eigen::MatrixXd &matrix, const Eigen::VectorXd &target)
@@ -304,7 +289,7 @@ namespace Algorithms
     // @return Eigen::MatrixXd
     // @param matrix input matrix
     // @param normalize indicates that should we or not normalize output values
-    // @param delete_zero_rows indicates that should we or not delete zero rows
+    // @param delete_zero_rows indicates that should we delete zero rows or not
     Eigen::MatrixXd gram_schmidt(const Eigen::MatrixXd &matrix, bool delete_zero_rows)
     {
         std::vector<Eigen::VectorXd> basis;
@@ -330,7 +315,7 @@ namespace Algorithms
                         inner2 = std::inner_product(basis_vector.data(), basis_vector.data() + basis_vector.size(), basis_vector.data(), 0.0);
                     }
                 }
-                projections.noalias() += (inner1 / inner2) * basis_vector;
+                projections += (inner1 / inner2) * basis_vector;
             }
 
             Eigen::VectorXd result = vec - projections;

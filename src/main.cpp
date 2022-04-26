@@ -23,16 +23,17 @@ namespace mp = boost::multiprecision;
 int main()
 {
 	Eigen::MatrixXd mat(2, 2);
-	mat << 1, 0, 0, 1;
+	mat << 0.5, 1.0, 0.5, 0.0;
 	//mat << 1, 0, 0, 1;
 	Eigen::VectorXd vec(2);
-	vec << 1.6, 1;
+	vec << 1.0, 0.51;
 	
 	std::cout << mat << "\n\n";
 	std::cout << vec << "\n\n";
 	std::cout << "Answer=\n" << Algorithms::CVP::greedy(mat, vec) << "\n\n";
 	std::cout << Algorithms::CVP::branch_and_bound(mat, vec) << "\n\n";
 
+	std::cout << (vec - Eigen::Vector2d(0.5, 0.5)).norm() << " " << (vec - Eigen::Vector2d(1, 0)).norm() << "\n\n";
 
 	return 0;
 }
