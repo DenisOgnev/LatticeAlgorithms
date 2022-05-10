@@ -8,8 +8,6 @@ project(LatticeAlgorithms)
 # )
 
 
-
-
 file(GLOB SRC
      "src/*.cpp"
 )
@@ -23,12 +21,14 @@ find_package(OpenMP REQUIRED)
 #include_directories(${OpenCL_INCLUDE_DIRS})
 include_directories(include)
 
-add_executable(main ${SRC})
+add_executable(${PROJECT_NAME} ${SRC})
 
 #target_link_libraries(main ${OpenCL_LIBRARIES})
-target_link_libraries(main OpenMP::OpenMP_CXX)
-target_link_libraries(main Boost::config Boost::multiprecision)
+target_link_libraries(${PROJECT_NAME} OpenMP::OpenMP_CXX)
+target_link_libraries(${PROJECT_NAME} Boost::config Boost::multiprecision)
 #target_link_libraries(main sfml-graphics sfml-audio sfml-window sfml-system)
+
+add_subdirectory(tex)
 
 #file(COPY "src/axpy.cl" DESTINATION ${CMAKE_BINARY_DIR})
 #file(COPY "src/axpy.cl" DESTINATION ${CMAKE_BINARY_DIR}/Release)

@@ -16,9 +16,8 @@ namespace Utils
     std::tuple<Eigen::Matrix<boost::multiprecision::cpp_int, -1, -1>, std::vector<int>, std::vector<int>, Eigen::Matrix<boost::multiprecision::cpp_rational, -1, -1>> get_linearly_independent_rows_by_gram_schmidt(const Eigen::Matrix<boost::multiprecision::cpp_int, -1, -1> &matrix);
     double det_by_gram_schmidt(const Eigen::Matrix<boost::multiprecision::cpp_int, -1, -1> &matrix);
     std::tuple<boost::multiprecision::cpp_int, boost::multiprecision::cpp_int, boost::multiprecision::cpp_int> gcd_extended(boost::multiprecision::cpp_int a, boost::multiprecision::cpp_int b);
-    std::string matrix_to_string(const Eigen::Matrix<boost::multiprecision::cpp_int, -1, -1> &matrix);
-    Eigen::MatrixXd generate_random_matrix_with_linearly_independent_rows(const int m, const int n, double lowest, double highest);
-    Eigen::ArrayXd generate_random_array(const int m, double lowest, double highest);
+    Eigen::MatrixXd generate_random_matrix_with_full_column_rank(const int m, const int n, int lowest, int highest);
+    Eigen::VectorXd generate_random_vector(const int m, double lowest, double highest);
     Eigen::VectorXd projection(const Eigen::MatrixXd &matrix, const Eigen::VectorXd &vector);
     Eigen::VectorXd closest_vector(const std::vector<Eigen::VectorXd> &matrix, const Eigen::VectorXd &vector);
 }

@@ -1,0 +1,22 @@
+\usepackage[utf8]{inputenc}
+\usepackage[english, russian]{babel}
+
+\usepackage{fontspec}
+\usepackage{indentfirst}
+
+\setmainfont{Times New Roman}
+
+\usepackage[left=2.5cm, right=1.5cm, top=2cm, bottom=2cm]{geometry}
+
+\renewcommand{\baselinestretch}{1.3}
+\parindent 1.25cm
+
+\usepackage{titlesec}
+\titleformat{\section}
+  {\normalfont\fontsize{16}{\baselineskip}\bfseries}{\thesection}{1em}{}
+\titleformat{\subsection}
+  {\normalfont\fontsize{14}{\baselineskip}\bfseries}{\thesubsection}{1em}{}
+\titlespacing{\section}{0pt}{0pt}{24pt}
+\titlespacing{\subsection}{0pt}{24pt}{12pt}
+
+

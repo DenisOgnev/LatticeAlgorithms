@@ -11,12 +11,11 @@
 #include "algorithms.hpp"
 
 namespace mp = boost::multiprecision;
-typedef mp::number<mp::cpp_bin_float_100::backend_type, mp::et_off> cpp_bin_float_100_et_off;
 
 namespace Utils
 {
     // Function for computing HNF of full row rank matrix
-    // @return Eigen::Matrix<cpp_int, -1, -1>
+    // @return Eigen::Matrix<boost::multiprecision::cpp_int, -1, -1>
     // @param H HNF
     // @param b column to be added
     Eigen::Matrix<mp::cpp_int, -1, -1> add_column(const Eigen::Matrix<mp::cpp_int, -1, -1> &H, const Eigen::Vector<mp::cpp_int, -1> &b_column)
@@ -67,7 +66,7 @@ namespace Utils
     }
 
     // Function for computing HNF, reduces elements of vector modulo diagonal elements of matrix
-    // @return Eigen::Matrix<cpp_int, -1, -1>
+    // @return Eigen::Matrix<boost::multiprecision::cpp_int, -1, -1>
     // @param vector vector to be reduced
     // @param matrix input matrix
     Eigen::Vector<mp::cpp_int, -1> reduce(const Eigen::Vector<mp::cpp_int, -1> &vector, const Eigen::Matrix<mp::cpp_int, -1, -1> &matrix)
@@ -79,7 +78,7 @@ namespace Utils
             mp::cpp_int t_vec_elem = result(i);
             mp::cpp_int t_matrix_elem = matrix(i, i);
 
-            boost::multiprecision::cpp_int x;
+            mp::cpp_int x;
             if (t_vec_elem >= 0)
             {
                 x = (t_vec_elem / t_matrix_elem);
@@ -94,8 +93,8 @@ namespace Utils
         return result;
     }
     
-    // Generates random matrix with full row rank (or with all rows linearly independent)
-    // @return Eigen::Matrix<cpp_int, -1, -1>
+    // Generates random matrix with full row rank (all rows are linearly independent)
+    // @return Eigen::Matrix<boost::multiprecision::cpp_int, -1, -1>
     // @param m number of rows, must be greater than one and less than or equal to the parameter n
     // @param n number of columns, must be greater than one and greater than or equal to the parameter m 
     // @param lowest lowest generated number, must be lower than lowest parameter by at least one
@@ -137,7 +136,7 @@ namespace Utils
     }
 
     // Generates random matrix
-    // @return Eigen::Matrix<cpp_int, -1, -1>
+    // @return Eigen::Matrix<boost::multiprecision::cpp_int, -1, -1>
     // @param m number of rows, must be greater than one
     // @param n number of columns, must be greater than one
     // @param lowest lowest generated number, must be lower than lowest parameter by at least one
@@ -163,9 +162,9 @@ namespace Utils
         return matrix.cast<mp::cpp_int>();
     }
 
-    // Returns matrix that consist of linearly independent columns of input matrix, othogonalized matrix and indexes of that columns in input matrix
+    // Returns matrix that consist of linearly independent columns of input matrix and othogonalized matrix
     // @param matrix input matrix
-    // @return std::tuple<Eigen::Matrix<cpp_int, -1, -1>, Eigen::Matrix<cpp_bin_float_100, -1, -1>, std::vector<int>>
+    // @return std::tuple<Eigen::Matrix<boost::multiprecision::cpp_int, -1, -1>, Eigen::Matrix<boost::multiprecision::cpp_rational, -1, -1>>
     std::tuple<Eigen::Matrix<mp::cpp_int, -1, -1>, Eigen::Matrix<mp::cpp_rational, -1, -1>> get_linearly_independent_columns_by_gram_schmidt(const Eigen::Matrix<mp::cpp_int, -1, -1> &matrix)
     {
         std::vector<Eigen::Vector<mp::cpp_rational, -1>> basis;
@@ -218,9 +217,9 @@ namespace Utils
         return std::make_tuple(result, gram_schmidt);
     }
 
-    // Returns matrix that consist of linearly independent rows of input matrix and indicies of that rows in input matrix
+    // Returns matrix that consist of linearly independent rows of input matrix, indicies of that rows in input matrix, indices of deleted rows and martix T, cobsisting of Gram Schmidt coefficients
     // @param matrix input matrix
-    // @return std::tuple<Eigen::Matrix<cpp_int, -1, -1>, std::vector<int>>
+    // @return std::tuple<Eigen::Matrix<boost::multiprecision::cpp_int, -1, -1>, std::vector<int>, std::vector<int>, Eigen::Matrix<boost::multiprecision::cpp_int, -1, -1>>
     std::tuple<Eigen::Matrix<mp::cpp_int, -1, -1>, std::vector<int>, std::vector<int>, Eigen::Matrix<mp::cpp_rational, -1, -1>> get_linearly_independent_rows_by_gram_schmidt(const Eigen::Matrix<mp::cpp_int, -1, -1> &matrix)
     {
         std::vector<Eigen::Vector<mp::cpp_rational, -1>> basis;
@@ -280,28 +279,8 @@ namespace Utils
         return std::make_tuple(result, indicies, deleted_indicies, T);
     }
 
-    // Computes determinant by using Gram Schmidt orthogonalization
-    // @return double
-    // @param matrix input matrix
-    // double det_by_gram_schmidt(const Eigen::Matrix<cpp_int, -1, -1> &matrix)
-    // {
-    //     double result = 1.0;
-    //     Eigen::MatrixXd gs = Algorithms::gram_schmidt(matrix);
-    //     // for (const auto &vec : gs.colwise())
-    //     // {
-    //     //     result *= vec.norm();
-    //     // }
-    //     for (int i = 0; i < gs.cols(); i++)
-    //     {
-    //         Eigen::VectorXd vec = gs.col(i);
-    //         result *= vec.norm();
-    //     }
-        
-    //     return result;
-    // }
-
     // Extended GCD algorithm, returns tuple of g, x, y such that xa + yb = g
-    // @return std::tuple<cpp_int, cpp_int, cpp_int>
+    // @return std::tuple<boost::multiprecision::cpp_int, boost::multiprecision::cpp_int, boost::multiprecision::cpp_int>
     // @param a first number
     // @param b second number
     std::tuple<mp::cpp_int, mp::cpp_int, mp::cpp_int> gcd_extended(mp::cpp_int a, mp::cpp_int b)
@@ -319,53 +298,54 @@ namespace Utils
         return std::make_tuple(gcd, x, y);
     }
 
-    // Function that translates Eigen Matrix to std::string for WolframAlpha checking
-    // @return std::string
-    // @param matrix input matrix
-    std::string matrix_to_string(const Eigen::Matrix<mp::cpp_int, -1, -1> &matrix)
+    // Generates random matrix with full column rank (all columns are linearly independent)
+    // @return Eigen::Matrix<boost::multiprecision::cpp_int, -1, -1>
+    // @param m number of rows, must be greater than one and greater than or equal to the parameter n
+    // @param n number of columns, must be greater than one and lower than or equal to the parameter m 
+    // @param lowest lowest generated number, must be lower than lowest parameter by at least one
+    // @param highest highest generated number, must be greater than lowest parameter by at least one
+    Eigen::MatrixXd generate_random_matrix_with_full_column_rank(const int m, const int n, int lowest, int highest)
     {
-        int m = static_cast<int>(matrix.rows());
-        int n = static_cast<int>(matrix.cols());
+        if (m < n)
+        {
+            throw std::invalid_argument("m must be less than or equal n");
+        }
         if (m < 1 || n < 1)
         {
-            throw std::invalid_argument("Matrix is not initialized");
+            throw std::invalid_argument("Number of rows or columns should be greater than one");
         }
-        if (matrix.isZero())
+        if (highest - lowest < 1)
         {
-            throw std::exception("Matrix is empty");
+            throw std::invalid_argument("highest parameter must be greater than lowest parameter by at least one");
+        }
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_int<int> dis (lowest, highest);
+
+        Eigen::MatrixXd matrix = Eigen::MatrixXd::NullaryExpr(m, n, [&]()
+                                                              { return dis(gen); });
+
+        Eigen::FullPivLU<Eigen::MatrixXd> lu_decomp(matrix);
+        auto rank = lu_decomp.rank();
+
+        while (rank != n)
+        {
+            matrix = Eigen::MatrixXd::NullaryExpr(m, n, [&]()
+                                                  { return dis(gen); });
+
+            lu_decomp.compute(matrix);
+            rank = lu_decomp.rank();
         }
 
-        std::string result = "{";
-        for (const auto &vec : matrix.colwise())
-        {
-            result += "{";
-            for (const auto &elem : vec)
-            {
-                //result += std::to_string(static_cast<cpp_int>(elem)) + ", ";
-                result += elem.str() + ", ";
-            }
-            result.pop_back();
-            if (!result.empty())
-            {
-                result.pop_back();
-                result += "}, ";
-            }
-        }
-        result.pop_back();
-        if (!result.empty())
-        {
-            result.pop_back();
-            result += "}";
-        }
-        return result;
-    }
+        return matrix;
+    }   
 
     // Generates random array
     // @return Eigen::VectorXd
     // @param m number of rows, must be greater than one
     // @param lowest lowest generated number, must be lower than lowest parameter by at least one
     // @param highest highest generated number, must be greater than lowest parameter by at least one
-    Eigen::ArrayXd generate_random_array(const int m, double lowest, double highest)
+    Eigen::VectorXd generate_random_vector(const int m, double lowest, double highest)
     {
         if (m < 1)
         {
@@ -377,14 +357,18 @@ namespace Utils
         }
         std::random_device rd;
         std::mt19937 gen(rd());
-        std::uniform_real_distribution<double> dis(lowest, highest + 1);
+        std::uniform_real_distribution<double> dis(lowest, highest);
 
-        Eigen::ArrayXd array = Eigen::ArrayXd::NullaryExpr(m, [&]()
+        Eigen::VectorXd array = Eigen::VectorXd::NullaryExpr(m, [&]()
                                                            { return dis(gen); });
 
         return array;
     }
 
+    // Computes projection of a vector onto a matrix using equations from Gram Schmidt computing
+    // @return Eigen::VectorXd
+    // @param matrix input matrix
+    // @param vector input vector
     Eigen::VectorXd projection(const Eigen::MatrixXd &matrix, const Eigen::VectorXd &vector)
     {
         Eigen::MatrixXd t_matrix(matrix.rows(), matrix.cols() + 1);
@@ -420,11 +404,15 @@ namespace Utils
             basis.push_back(t_result);
         }
 
-        Eigen::VectorXd result = basis.back();
+        Eigen::VectorXd result = basis[basis.size() - 1];
 
         return result;
     }
 
+    // Finds vector that is closest to other vectors in matrix
+    // @return Eigen::VectorXd
+    // @param matrix input matrix
+    // @param vector input vector
     Eigen::VectorXd closest_vector(const std::vector<Eigen::VectorXd> &matrix, const Eigen::VectorXd &vector)
     {
         Eigen::VectorXd closest = matrix[0];

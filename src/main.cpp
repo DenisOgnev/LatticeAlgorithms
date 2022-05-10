@@ -22,36 +22,49 @@ namespace mp = boost::multiprecision;
 
 int main()
 {
-	Eigen::MatrixXd mat(2, 2);
-	mat << 0.5, 1.0, 0.5, 0.0;
-	//mat << 1, 0, 0, 1;
-	Eigen::VectorXd vec(2);
-	vec << 1.0, 0.51;
+	int m = 10;
+	int n = 8;
+	int lowest = 1;
+	int highest = 5;
+	Eigen::MatrixXd mat = Utils::generate_random_matrix_with_full_column_rank(m, n, lowest, highest);
+	Eigen::VectorXd vec = Utils::generate_random_vector(m, lowest, highest);
 	
-	std::cout << mat << "\n\n";
-	std::cout << vec << "\n\n";
-	std::cout << "Answer=\n" << Algorithms::CVP::greedy(mat, vec) << "\n\n";
-	std::cout << Algorithms::CVP::branch_and_bound(mat, vec) << "\n\n";
+	double start = omp_get_wtime();
+	Eigen::VectorXd greedy = Algorithms::CVP::greedy(mat, vec);
+	double end = omp_get_wtime();
+	std::cout << "Greedy: " << end - start << "\n";
 
-	std::cout << (vec - Eigen::Vector2d(0.5, 0.5)).norm() << " " << (vec - Eigen::Vector2d(1, 0)).norm() << "\n\n";
+	start = omp_get_wtime();
+	Eigen::VectorXd bb = Algorithms::CVP::branch_and_bound(mat, vec);
+	end = omp_get_wtime();
+	std::cout << "B&b: " << end - start << "\n";
+
+	// std::cout << "mat = \n" << mat << "\n" << "vec = \n" << vec << "\n\n";
+	// std::cout << greedy << "\n\n" << bb << "\n\n";
 
 	return 0;
 }
 
+// int main()
+// {
+// 	Eigen::Matrix<mp::cpp_int, -1, -1> mat = Utils::generate_random_matrix(5, 6, 1, 10);
+// 	Eigen::Matrix<mp::cpp_int, -1, -1> mat2 = Utils::generate_random_matrix_with_full_row_rank(5, 5, 1, 10);
+// 	// mat << 2, 1, 2, 2, 2,
+// 	// 	2, 1, 1, 2, 1,
+// 	// 	2, 1, 1, 2, 2,
+// 	// 	1, 2, 2, 1, 1,
+// 	// 	2, 2, 1, 2, 2;
+// 	std::cout << mat << "\n\n";
+// 	double start_time = omp_get_wtime();
+// 	Eigen::Matrix<mp::cpp_int, -1, -1> HNF = Algorithms::HNF::HNF(mat);
+// 	double end_time = omp_get_wtime();
+// 	std::cout << end_time - start_time << "\n";
 
-	// Eigen::Matrix<boost::multiprecision::cpp_int, -1, -1> mat = Utils::generate_random_matrix(25, 25, 1, 10);
-	// Eigen::Matrix<boost::multiprecision::cpp_int, -1, -1> mat2 = Utils::generate_random_matrix_with_full_row_rank(25, 25, 1, 10);
-	// // mat << 2, 1, 2, 2, 2,
-	// // 	2, 1, 1, 2, 1,
-	// // 	2, 1, 1, 2, 2,
-	// // 	1, 2, 2, 1, 1,
-	// // 	2, 2, 1, 2, 2;
-	// double start_time = omp_get_wtime();
-	// Eigen::Matrix<boost::multiprecision::cpp_int, -1, -1> HNF = Algorithms::HNF::HNF(mat);
-	// double end_time = omp_get_wtime();
-	// std::cout << end_time - start_time << "\n";
+// 	start_time = omp_get_wtime();
+// 	Eigen::Matrix<mp::cpp_int, -1, -1> HNF2 = Algorithms::HNF::HNF_full_row_rank(mat);
+// 	end_time = omp_get_wtime();
+// 	std::cout << end_time - start_time << "\n";
 
-	// start_time = omp_get_wtime();
-	// Eigen::Matrix<boost::multiprecision::cpp_int, -1, -1> HNF2 = Algorithms::HNF::HNF_full_row_rank(mat2);
-	// end_time = omp_get_wtime();
-	// std::cout << end_time - start_time << "\n";
+// 	std::cout << HNF << "\n\n" <<  HNF2 << "\n\n";
+// 	return 0;
+// }
