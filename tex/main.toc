@@ -1,0 +1,16 @@
+\babel@toc {russian}{}\relax 
+\contentsline {section}{\numberline {1}Список условных обозначений и сокращений (TODO)}{4}{}%
+\contentsline {section}{\numberline {2}Введение (TODO)}{5}{}%
+\contentsline {section}{\numberline {3}Основная часть (TODO)}{6}{}%
+\contentsline {subsection}{\numberline {3.1}Основные понятия}{6}{}%
+\contentsline {subsection}{\numberline {3.2}Обзор используемых инструментов}{6}{}%
+\contentsline {subsection}{\numberline {3.3}Алгоритм для нахождения ЭНФ для матриц с полным рангом строки}{6}{}%
+\contentsline {subsection}{\numberline {3.4}Алгоритм для нахождения ЭНФ для любых матриц}{6}{}%
+\contentsline {subsection}{\numberline {3.5}Применение ЭНФ}{6}{}%
+\contentsline {subsection}{\numberline {3.6}Проблема ближайшего вектора}{6}{}%
+\contentsline {subsection}{\numberline {3.7}Жадный метод (Greedy): алгоритм ближайшей плоскости Бабая}{6}{}%
+\contentsline {subsection}{\numberline {3.8}Метод ветвей и границ (Branch and Bound): алгоритм перечисления}{6}{}%
+\contentsline {subsection}{\numberline {3.9}Обзор программной реализации}{6}{}%
+\contentsline {section}{\numberline {4}Заключение (TODO)}{7}{}%
+\contentsline {section}{\numberline {5}Список источников (TODO)}{8}{}%
+\contentsline {section}{Приложения (TODO)}{9}{}%

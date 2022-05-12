@@ -1,9 +1,0 @@
-\babel@toc {russian}{}\relax 
-\contentsline {section}{\numberline {1}Список условных обозначений (TODO)}{4}{}%
-\contentsline {section}{\numberline {2}Введение (TODO)}{5}{}%
-\contentsline {section}{\numberline {3}Основная часть (TODO)}{6}{}%
-\contentsline {subsection}{\numberline {3.1}Один}{6}{}%
-\contentsline {subsection}{\numberline {3.2}Два}{6}{}%
-\contentsline {section}{\numberline {4}Заключение (TODO)}{7}{}%
-\contentsline {section}{\numberline {5}Список источников (TODO)}{8}{}%
-\contentsline {section}{Приложения (TODO)}{9}{}%
