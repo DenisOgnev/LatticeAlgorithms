@@ -19,10 +19,77 @@
 \begin{enumerate}
 \item Необходимо найти линейно независимые столбцы матрицы. Их количество всегда будет равно $ m $, т.к. наша матрица полного ранга строки, а значит матрица, состоящая из этих столбцов, будет размера $ m \times m $. Для нахождения этих строк можно использовать алгоритм ортогонализации Грама-Шмитда: если $ \mathbf{b}_i^\ast=0 $, то $ i $-ая строка является линейной комбинацией других строк, и ее необходимо удалить. Реализация данного алгоритма находится в пространстве имен Utils в функции get\_linearly\_independent\_columns\_by\_gram\_schmidt. Полученная матрица будет названа $  \mathbf{B}’ $.
 \item Для вычисления $ \mathrm{det} $ напишем функцию det\_by\_gram\_schmidt, которая принимает на вход матрицу и вычисляет $ \mathrm{det} $ по формуле $ d=\prod_i{\|\mathbf{b}_i^\ast\|} $ - сумма произведений длин всех элементов, полученных после применения ортогонализации Грама-Шмидта. Матрица $ \mathbf{H}_\mathbf{0} $ будет единичной матрицей размера $ m \times m $, умноженной на определитель. В результате все диагональные элементы будут равны $ d $.
-\item Применяем функцию AddColumn (реализация находится в функции add\_column) к $ \mathbf{H}_0 $ и первому столбцу матрицы $ \mathbf{B} $ -- $ \mathbf{b}_0 $, получаем $ \mathbf{H}_1 $, повторяем для всех столбцов, получаем $ \mathbf{H}_n $.
+\item Применяем функцию AddColumn (реализация находится в функции add\_column) к $ \mathbf{H}_0 $ и первому столбцу матрицы $ \mathbf{B} - \mathbf{b}_0 $, получаем $ \mathbf{H}_1 $; повторяем для всех столбцов, получаем $ \mathbf{H}_n $.
 \item $ \mathbf{H}_n $ является ЭНФ($ \mathbf{B} $).
 \end{enumerate}
 
-Алгоритм AddColumn на вход принимает квадратную невырожденную ЭНФ матрицы $ \mathbf{H} \in \mathbb{Z}^{m \times m} $ и вектор $ \mathbf{b} \in \mathbb{Z}^m $ и работает следующим образом. Если $ m = 0 $, то тут ничего не надо делать, и мы можем сразу вернуть $ \mathbf{H} $. В противном случае, пусть $ \mathbf{H} = $ и дальше:
+Алгоритм AddColumn на вход принимает квадратную невырожденную ЭНФ матрицы $ \mathbf{H} \in \mathbb{Z}^{m \times m} $ и вектор $ \mathbf{b} \in \mathbb{Z}^m $ и работает следующим образом. Если $ m = 0 $, то тут ничего не надо делать, и мы можем сразу вернуть $ \mathbf{H} $. В противном случае, пусть 
+$ \mathbf{H} = \left[ \begin{array}{cccc}
+\mathrm{a} & \mathbf{0}^\mathrm{T} \\
+\mathbf{h}' & \mathbf{H}'' \end{array} \right] $ и 
+$ \mathbf{b} = \left[ \begin{array}{cccc}
+\mathrm{b} \\
+\mathbf{b}' \end{array} \right] $ и дальше:
+
+\begin{enumerate}
+\item Вычислить $ \mathrm{g}=\text{НОД}⁡(\mathrm{a, b}) $ и целые $ \mathrm{x, y} $ такие, что $ \mathrm{xa+yb=g} $, используя расширенный НОД алгоритм.
+\item Применить унимодулярное преобразование 
+$ \mathbf{U}=\left[ \begin{array}{cccc}
+\mathrm{x} & \mathrm{(\text{-}b/g)} \\ 
+\mathrm{y} & \mathrm{(a/g)} \end{array} \right] $ к первому столбцу из $ \mathbf{H} $ и $ \mathbf{b} $ чтобы получить 
+$ \left[ \begin{array}{cccc}
+\mathrm{a} & \mathrm{b} \\
+\mathbf{h} & \mathbf{b}' \end{array} \right] \mathbf{U}=
+\left[ \begin{array}{cccc}
+\mathrm{g} & \mathrm{0} \\
+\mathbf{h}' & \mathbf{b}'' \end{array} \right] $ 
+\item Добавить соответствующий вектор из $ \mathcal{L}\left(\mathbf{H}'\right) $ к $ \mathbf{b}'' $, чтобы сократить его элементы по модулю диагональных элементов из $ \mathbf{H}' $.
+\item Рекурсивно вызвать AddColumn на вход $ \mathbf{H}' $ и $ \mathbf{b}'' $ чтобы получить матрицу $ \mathbf{H}'' $.
+\item Добавить соответствующий вектор из $ \mathcal{L}\left(\mathbf{H}''\right) $ к $ \mathbf{h}' $ чтобы сократить его элементы по модулю диагональных элементов из $ \mathbf{H}'' $.
+\item Вернуть $ \left[\begin{array}{cccc}
+\mathrm{g} & \mathbf{0}^\mathrm{T} \\
+\mathbf{h}' & \mathbf{H}'' 
+\end{array}\right] $ 
+
+\end{enumerate}
+
+Разберем подпункты:
+
+\begin{enumerate}
+\item Функция extended\_gcd принимает $ \mathrm{a, b} $ , вычисляет наибольший общий делитель и целые $ \mathrm{x, y} $ такие, что $ \mathrm{xa + yb = g} $
+\item Составляем матрицу $ \mathbf{U}= \left[\begin{array}{cccc}
+\mathrm{x} & \mathrm{(\text{-}b/g)} \\
+\mathrm{y} & \mathrm{(a/g)} \end{array}\right] $ и умножаем ее на матрицу, составленную из первого столбца $ \mathbf{H} $ и столбца $ \mathbf{b} $, чтобы получить
+$$ \left[\begin{array}{cccc}
+\mathrm{a} & \mathrm{b} \\
+\mathbf{h} & \mathbf{b}' \end{array}\right] \mathbf{U}=
+\left[\begin{array}{cccc}
+\mathrm{g} & \mathrm{0} \\
+\mathbf{h}' & \mathbf{b}'' \end{array}\right] $$
+\item Функция reduce принимает на вход матрицу и вектор, получает необходимый вектор из решетки от матрицы на входе, чтобы сократить элементы вектора по модулю диагональных элементов из матрицы. Применяем функцию reduce к $ \mathbf{H}' $ и $ \mathbf{b} $
+\item Рекурсивно вызываем AddColumn, на вход отправляем $ \mathbf{H}' $ и $ \mathbf{b}'' $  получаем матрицу $ \mathbf{H}'' $.
+\item Вызываем функцию reduce к $ \mathbf{H}'' $ и $ \mathbf{h}' $
+\item Составляем необходимую матрицу и возвращаем $ \left[\begin{array}{cccc}
+\mathrm{g} & \mathbf{0}^\mathrm{T} \\
+\mathbf{h}' & \mathbf{H}'' \end{array}\right] $
+\end{enumerate}
+
+\subsection{Общий алгоритм для любых матриц}
+
+\begin{enumerate}
+\item Запустить процесс ортогонализации Грамма-Шмидта к строкам $ \mathbf{r}_1, \ldots, \mathbf{r}_m $ из $ \mathbf{B} $, и пусть $ \mathrm{K}=\left\{\mathrm{k}_1, \ldots, \mathrm{k}_l \right\}(\mathrm{k}_1< \ldots <\mathrm{k}_l) $ – это множество индексов, такое, что $ \mathbf{r}_{\mathrm{k}_i}^\ast \neq 0 $. Определим операцию проецирования $ \prod_\mathrm{K}:\mathbb{R}^m \rightarrow \mathbb{R}^l $ при $ [\prod_\mathrm{K}(\mathbf{x})]_i = \mathrm{x}_{\mathrm{k}_i} $. Заметим, что строки $ \mathbf{r}_\mathrm{k}(\mathrm{k} \in \mathrm{K}) $ линейно независимы и любая другая строка может быть выражена как линейная комбинация предыдущих строк $ \mathbf{r}_j\left(\left\{j \in \mathrm{K}:j<i \right\}\right) $. Следовательно, $ \prod_\mathrm{K} $ однозначна, когда ограничена к $ \mathcal{L}(\mathbf{B})$ , и ее инверсия может быть легко вычислена, используя коэффициенты Грама-Шмидта $ \mu_{i,j} $.
+\item Определить новую матрицу $ \mathbf{B}'=\prod_\mathrm{K}(\mathbf{B}) $, которая полного ранга, и запустить алгоритм, данный в предыдущем пункте, чтобы найти ЭНФ $ \mathbf{B}'' $ от $ \mathbf{B}' $.
+\item Применить функцию обратную операции проецирования, $ \prod_\mathrm{K}^{\text{-}1} $, к ЭНФ, определенной в предыдущем шаге $ (\mathbf{B}'') $, к данной матрице $ \mathbf{H} $. Легко заметить, что $ \mathcal{L}\left(\mathbf{H}\right)\mathcal{L}\left(\mathbf{B}\right)\ $ и $ \mathbf{H} $ входят в ЭНФ. Следовательно, $ \mathbf{H} $ является ЭНФ $ \mathbf{B} $.
+\end{enumerate}
+
+Алгоритм прост, но вызывает вопрос операция проецирования и обратная к ней. Для того, чтобы находить результат проецирования напишем функцию get\_linearly\_independent\_ro\\ws\_by\_gram\_schmidt, которая будет возвращать матрицу $ \mathbf{B}' $, состоящую из линейно независимых строк, а также массив индексов этих строк из исходного массива. К матрице $ \mathbf{B}' $ применяется алгоритм нахождения ЭНФ для матриц с полным рангом, данный в прошлом разделе. Далее необходимо восстановить удаленные строки. Т.к. они являются линейной комбинацией линейно независимых строк, то мы можем найти коэффициенты, на которые нужно умножить строки из матрицы $ \mathbf{B}' $ и после чего сложить их, чтобы получить нужную строку, которую необходимо добавить к $ \mathbf{B}' $.
+
+\subsection{Пример нахождения ЭНФ}
+
+\subsection{Сложность алгоритма}
+
+\subsection{Обзор программной реализации}
+
+\subsection{Применение}
 
 \clearpage

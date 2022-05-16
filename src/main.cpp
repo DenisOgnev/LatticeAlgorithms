@@ -34,10 +34,10 @@ int main()
 	double end = omp_get_wtime();
 	std::cout << "Greedy: " << end - start << "\n";
 
-	start = omp_get_wtime();
-	Eigen::VectorXd bb = Algorithms::CVP::branch_and_bound(mat, vec);
-	end = omp_get_wtime();
-	std::cout << "B&b: " << end - start << "\n";
+	// start = omp_get_wtime();
+	// Eigen::VectorXd bb = Algorithms::CVP::branch_and_bound(mat, vec);
+	// end = omp_get_wtime();
+	// std::cout << "B&b: " << end - start << "\n";
 
 	// std::cout << "mat = \n" << mat << "\n" << "vec = \n" << vec << "\n\n";
 	// std::cout << greedy << "\n\n" << bb << "\n\n";
