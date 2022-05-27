@@ -7,6 +7,7 @@
 #include <stdexcept>
 #include <string> 
 #include <chrono>
+#include <algorithm>
 #include <thread>
 #include "algorithms.hpp"
 
@@ -178,19 +179,9 @@ namespace Utils
             for (int i = 0; i < basis.size(); i++)
             {
                 Eigen::Vector<mp::cpp_rational, -1> basis_vector = basis[i];
-                mp::cpp_rational inner1;
-                mp::cpp_rational inner2;
-                #pragma omp parallel sections
-                {
-                    #pragma omp section
-                    {
-                        inner1 = std::inner_product(vec.data(), vec.data() + vec.size(), basis_vector.data(), mp::cpp_rational(0.0));
-                    }
-                    #pragma omp section
-                    {
-                        inner2 = std::inner_product(basis_vector.data(), basis_vector.data() + basis_vector.size(), basis_vector.data(), mp::cpp_rational(0.0));
-                    }
-                }
+                mp::cpp_rational inner1 = std::inner_product(vec.data(), vec.data() + vec.size(), basis_vector.data(), mp::cpp_rational(0.0));
+                mp::cpp_rational inner2 = std::inner_product(basis_vector.data(), basis_vector.data() + basis_vector.size(), basis_vector.data(), mp::cpp_rational(0.0));
+                    
                 mp::cpp_rational coef = inner1 / inner2;
                 projections += basis_vector * coef;
             }
@@ -234,19 +225,9 @@ namespace Utils
             for (int i = 0; i < basis.size(); i++)
             {
                 Eigen::Vector<mp::cpp_rational, -1> basis_vector = basis[i];
-                mp::cpp_rational inner1;
-                mp::cpp_rational inner2;
-                #pragma omp parallel sections
-                {
-                    #pragma omp section
-                    {
-                        inner1 = std::inner_product(vec.data(), vec.data() + vec.size(), basis_vector.data(), mp::cpp_rational(0.0));
-                    }
-                    #pragma omp section
-                    {
-                        inner2 = std::inner_product(basis_vector.data(), basis_vector.data() + basis_vector.size(), basis_vector.data(), mp::cpp_rational(0.0));
-                    }
-                }
+                mp::cpp_rational inner1 = std::inner_product(vec.data(), vec.data() + vec.size(), basis_vector.data(), mp::cpp_rational(0.0));
+                mp::cpp_rational inner2 = std::inner_product(basis_vector.data(), basis_vector.data() + basis_vector.size(), basis_vector.data(), mp::cpp_rational(0.0));
+        
                 mp::cpp_rational u_ij = 0;
                 if (!inner1.is_zero())
                 {
@@ -320,7 +301,7 @@ namespace Utils
         }
         std::random_device rd;
         std::mt19937 gen(rd());
-        std::uniform_int<int> dis (lowest, highest);
+        std::uniform_int_distribution<int> dis (lowest, highest);
 
         Eigen::MatrixXd matrix = Eigen::MatrixXd::NullaryExpr(m, n, [&]()
                                                               { return dis(gen); });
@@ -355,8 +336,8 @@ namespace Utils
         {
             throw std::invalid_argument("highest parameter must be greater than lowest parameter by at least one");
         }
-        std::random_device rd;
-        std::mt19937 gen(rd());
+        std::mt19937 gen(std::random_device{}());
+        
         std::uniform_real_distribution<double> dis(lowest, highest);
 
         Eigen::VectorXd array = Eigen::VectorXd::NullaryExpr(m, [&]()
@@ -384,13 +365,13 @@ namespace Utils
                 Eigen::VectorXd basis_vector = basis[i];
                 double inner1;
                 double inner2;
-                #pragma omp parallel sections
+                //#pragma omp parallel sections
                 {
-                    #pragma omp section
+                    //#pragma omp section
                     {
                         inner1 = std::inner_product(vec.data(), vec.data() + vec.size(), basis_vector.data(), 0.0);
                     }
-                    #pragma omp section
+                    //#pragma omp section
                     {
                         inner2 = std::inner_product(basis_vector.data(), basis_vector.data() + basis_vector.size(), basis_vector.data(), 0.0);
                     }

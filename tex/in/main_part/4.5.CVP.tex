@@ -27,48 +27,246 @@ $$ \min \limits_{x}f(\mathbf{x}) = dist\left(\mathbf{t}, \mathcal{L}\left(\mathb
 Суть жадного метода состоит в выборе переменных, определяющих пространство решений, по одной, каждый раз выбирая значение, которые выглядит наиболее многообещающим. В нашем случае, выберем значение x, которое дает наименьшее возможное значение для нижней границы $ ||\mathbf{t}' \perp \mathbf{B}' || $. Напомним, что $ \mathbf{B}=\left[\mathbf{B}', \mathbf{b}\right] $ и $ \mathbf{x}=\left(\mathbf{x}' ,x\right) $, и что для любого фиксированного значения $ x $, ПБВ $ (\mathbf{B}, \mathbf{t}) $ сводится к ПБВ $ (\mathbf{B}',\mathbf{t}') $, где $ \mathbf{t}'=\mathbf{t}-\mathbf{b}x $. Используя $ ||\mathbf{t}' \perp \mathbf{B}' || $ для нижней границы, мы хотим выбрать значение $ x $ такое, что 
 $$ || \mathbf{t}' \perp \mathbf{B}' || = || \mathbf{t} - \mathbf{b}x \perp \mathbf{B}' || = || (\mathbf{t} \perp \mathbf{B}') - (\mathbf{b} \perp \mathbf{B}')x || $$ 
 как можно меньше. Это очень простая 1-размерная ПБВ проблема (с решеткой $ \mathcal{L}\left(\mathbf{b} \perp \mathbf{B}'\right) $ и целью $ \mathbf{t} \perp \mathbf{B}') $, которая может быть сразу решена установкой
-$$ x = \left\lfloor \left\langle t,b^* \right\rangle \over ||b^*||^2 \right\rceil $$
+$$ x = \left\lfloor \left\langle \mathbf{t},\mathbf{b}^* \right\rangle \over ||\mathbf{b}^*||^2 \right\rceil $$
 где $ \mathbf{b}^* = \mathbf{b} \perp \mathbf{B}' $ компонента вектора $ \mathbf{b} $, ортогональная другим базисным векторам. Полный алгоритм приведен ниже: \newline
-$ \text{Greedy}([], \mathbf{t}) = 0 $ \newline
-$ \text{Greedy}([\mathbf{B},\mathbf{b}],\mathbf{t}) = c \cdot \mathbf{b} + \text{Greedy}(\mathbf{B},\mathbf{t} - c \cdot \mathbf{b}) $
+%$ \text{Greedy}([\ ], \mathbf{t}) = 0 $ \newline
+%$ \text{Greedy}([\mathbf{B},\mathbf{b}],\mathbf{t}) = c \cdot \mathbf{b} + \text{Greedy}(\mathbf{B},\mathbf{t} - c \cdot \mathbf{b}) $
 
-$ \text{где } \mathbf{b}^* = \mathbf{b} \perp \mathbf{B} $
+%$ \text{где } \mathbf{b}^* = \mathbf{b} \perp \mathbf{B} $
 
-$ \qquad x = \left\langle \mathbf{t},\mathbf{b}^* \right\rangle / \left\langle \mathbf{b}^*,\mathbf{b}^* \right\rangle $
+%$ \qquad x = \left\langle \mathbf{t},\mathbf{b}^* \right\rangle / \left\langle \mathbf{b}^*,\mathbf{b}^* \right\rangle $
 
-$ \qquad c = \left\lfloor x \right\rceil $.
+%$ \qquad c = \left\lfloor x \right\rceil $.
+
+\begin{algorithmic}
+\Require{$ \left[\mathbf{B}, \mathbf{b}\right], \mathbf{t} $} 
+\Ensure{$ \begin{cases}
+\mathbf{0} &\mathbf{Input} = [\ ], \mathbf{t} \\
+c \cdot \mathbf{b} + Greedy(\mathbf{B}, \mathbf{t} - c \cdot \mathbf{b}) &\mathbf{Input} = [\mathbf{B}, \mathbf{b}], \mathbf{t}
+\end{cases} $}
+
+\State {$ \mathbf{b}^* \gets \mathbf{b} \perp \mathbf{B} $}
+\State {$ x \gets \left\langle \mathbf{t}, \mathbf{b}^* \right\rangle / \left\langle \mathbf{b}^*,\mathbf{b}^* \right\rangle $}
+\State {$ c \gets \left\lfloor x \right\rceil $}
+\end{algorithmic}
+
+\subsection{Нерекурсивная реализация}
+
+Рекурсивный алгоритм, описанный в прошлом пункте, можно преобразовать в нерекурсивный. Для этого необходимо избавиться от рекурсии путем простой замены на цикл: 
+
+\begin{algorithmic}
+\Require{$ \mathbf{B}, \mathbf{t} $} 
+\Ensure{$ \mathbf{result} $}
+
+\State {$ \mathbf{GS} \gets {GramSchmidt(\mathbf{B})} $}
+\State {$ n \gets {\mathbf{B}.columns} $}
+\State {$ result \gets \mathbf{0} $}
+\For {$ i \gets 0 $ to $ n $}
+\State {$ index \gets n - i - 1 $}
+\State {$ \mathbf{b} \gets \mathbf{B}.column(index) $}
+\State {$ \mathbf{b}^* \gets \mathbf{GS}.column(index) $}
+\State {$ x \gets \left\langle \mathbf{t},\mathbf{b}^* \right\rangle / \left\langle \mathbf{b}^*,\mathbf{b}^* \right\rangle $}
+\State {$ c \gets \left\lfloor x \right\rceil $}
+\State {$ \mathbf{t} \gets \mathbf{t} - c \cdot \mathbf{b} $}
+\State {$ \mathbf{result} \gets \mathbf{result} + c \cdot \mathbf{b} $}
+\EndFor
+\end{algorithmic}
 
 \subsection{Пример жадного метода}
 
+Рассмотрим пример на простой решетке $ \mathbf{B} = \left[\begin{array}{cccc}
+1 & 0 \\
+0 & 1
+\end{array}\right] $ и целевым вектором $ \mathbf{t} = \left[\begin{array}{cccc}
+1.6 \\
+1.6
+\end{array}\right] $.
+
+Представим входную матрицу в виде $ \left[\mathbf{B}, \mathbf{b}\right] $. На каждом шаге нам необходимо вычислять вектор $ \mathbf{b}^* = \mathbf{b} \perp \mathbf{B} $. Эти вектора можно заранее вычислить через алгоритм Грама-Шмидта. В нашем случае вектора уже перпендикулярны друг другу. Смысл алгоритма заключается в установлении одной координаты за раз, для этого мы берем крайний вектор базиса, находим коэффициент, на который его надо умножить, и скадываем с результатом рекурсии текущего алгоритма со входом уменьшенной матрицы и отредактированной целью. Таким образом мы найдем коэффициенты для каждого вектора базиса, и ответ будет суммой умножения коэффициентов на соответствующий вектор базиса:
+
+\begin{enumerate}
+
+\item 
+$ \left[\mathbf{B}, \mathbf{b}\right] = \left[\begin{array}{cccc}
+1 & 0\\
+0 & 1
+\end{array}\right] $, $ \mathbf{t} = \left[\begin{array}{cccc}
+1.6 \\
+1.6
+\end{array}\right] $, $ \mathbf{b}^* = \left[\begin{array}{cccc}
+0 \\
+1
+\end{array}\right] $, $ x = 1.6 $, $ c = 2 $, $ c \cdot \mathbf{b} = \left[\begin{array}{cccc}
+0 \\
+2
+\end{array}\right] $.
+
+Рекурсивно вызываем метод, на вход отправляем $ \left[\mathbf{B}, \mathbf{b}\right] = \left[\begin{array}{cccc}
+1 \\
+0
+\end{array}\right] $, $ \mathbf{t} = \mathbf{t} - c \cdot \mathbf{b} = \left[\begin{array}{cccc}
+0 \\
+-0.4
+\end{array}\right] $
+
+\item 
+$ \left[\mathbf{B}, \mathbf{b}\right] = \left[\begin{array}{cccc}
+1 \\
+0
+\end{array}\right] $, $ \mathbf{t} = \left[\begin{array}{cccc}
+0 \\
+-0.4
+\end{array}\right] $, $ \mathbf{b}^* = \left[\begin{array}{cccc}
+1 \\
+0
+\end{array}\right] $, $ x = 1.6 $, $ c = 2 $, $ c \cdot \mathbf{b} = \left[\begin{array}{cccc}
+2 \\
+0
+\end{array}\right] $.
+
+Рекурсивно вызываем метод, на вход отправляем $ \left[\mathbf{B}, \mathbf{b}\right] = \left[\begin{array}{cccc}
+
+\end{array}\right] $, $ \mathbf{t} = \mathbf{t} - c \cdot \mathbf{b} = \left[\begin{array}{cccc}
+-2 \\
+-0.4
+\end{array}\right] $
+
+\item 
+Т.к. $ \left[\mathbf{B}, \mathbf{b}\right] = \left[ \right] $, то возвращаем пустой вектор.
+
+В итоге сумма векторов будет равна $ \left[\begin{array}{cccc}
+2 \\
+2
+\end{array}\right] $ -- искомый вектор.
+
+\end{enumerate}
+
 \subsection{Метод ветвей и границ}
 
-Структура похожа на жадный алгоритм, но вместо жадной установки $ x_n $ на наиболее подходящее значение (то есть на то, для которого нижняя граница расстояния $ \mathbf{t}' \perp \mathbf{B}' $ минимальна), мы ограничиваем множество всех возможных значений для $ x $ , и затем мы переходим на каждую из них для решения каждой соответствующей подзадачи независимо. В заключении, мы выбираем наилучшее возможное решение среди возвращенных всеми ветками.
+Алгоритм похож на жадный метод, но вместо установки $ x_n $ на наиболее подходящее значение (то есть на то, для которого нижняя граница расстояния $ \mathbf{t}' \perp \mathbf{B}' $ минимальна), мы ограничиваем множество всех возможных значений для $ x $ , и затем мы переходим на каждую из них для решения каждой соответствующей подзадачи независимо. В заключении, мы выбираем наилучшее возможное решение среди возвращенных всеми ветками.
 
 Чтобы ограничить значения, которые может принимать $ x $, нам также нужна верхняя граница расстояния от цели до решетки. Ее можно получить несколькими способами. Например, можно просто использовать $ ||\mathbf{t} || $ (расстояние от цели до начала координат) в качестве верхней границы. Но лучше использовать жадный алгоритм, чтобы найти приближенное решение $ \mathbf{v} = \text{Greedy}(\mathbf{B}, \mathbf{t}) $, и использовать $ || \mathbf{t} - \mathbf{v} || $ в качестве верхней границы. Как только верхняя граница $ u $  установлена, можно ограничить переменную $ x $ такими значениями, что $ (\mathbf{t} - x\mathbf{b}) \perp \mathbf{B}' || \leq u $.
 
 Окончательный алгоритм похож на жадный метод и описан ниже: \newline
-$ \text{Branch\&Bound}([], \mathbf{t}) = 0 $ \newline
-$ \text{Branch\&Bound}([\mathbf{B}, \mathbf{b}], \mathbf{t}) = \text{closest}(V,\textbf{t})  $ 
+%$ \text{Branch\&Bound}([], \mathbf{t}) = 0 $ \newline
+%$ \text{Branch\&Bound}([\mathbf{B}, \mathbf{b}], \mathbf{t}) = \text{closest}(V,\textbf{t})  $ 
 
-$ \text{где } \mathbf{b}^* = \mathbf{b} \perp \mathbf{B} $ 
+%$ \text{где } \mathbf{b}^* = \mathbf{b} \perp \mathbf{B} $ 
 
-$ \qquad \mathbf{v} = \text{Greedy}(\mathbf{B},\mathbf{t}) $
+%$ \qquad \mathbf{v} = \text{Greedy}(\mathbf{B},\mathbf{t}) $
 
-$ \qquad X = {x: || (\mathbf{t} - x\mathbf{b}) \perp \mathbf{B} || \leq || \mathbf{t} - \mathbf{v} ||} $
+%$ \qquad X = {x: || (\mathbf{t} - x\mathbf{b}) \perp \mathbf{B} || \leq || \mathbf{t} - \mathbf{v} ||} $
 
-$ \qquad V = {x \cdot \mathbf{b} + \text{Branch\&Bound}(\mathbf{B},\mathbf{t} - x \cdot \mathbf{b}):x \in X} $
+%$ \qquad V = {x \cdot \mathbf{b} + \text{Branch\&Bound}(\mathbf{B},\mathbf{t} - x \cdot \mathbf{b}):x \in X} $
+
+\begin{algorithmic}
+\Require{$ \left[\mathbf{B}, \mathbf{b}\right], \mathbf{t} $} 
+\Ensure{$ \begin{cases}
+\mathbf{0} &\mathbf{Input} = [\ ], \mathbf{t} \\
+closest(V, \mathbf{t}) &\mathbf{Input} = [\mathbf{B}, \mathbf{b}], \mathbf{t}
+\end{cases} $}
+
+\State {$ \mathbf{b}^* \gets \mathbf{b} \perp \mathbf{B} $}
+\State {$ \mathbf{v} \gets Greedy([\mathbf{B}, \mathbf{b}], \mathbf{t}) $}
+\State {$ X \gets \left\lbrace x: || (\mathbf{t} - x\mathbf{b}) \perp \mathbf{B} || \leq || \mathbf{t} - \mathbf{v} || \right\rbrace $ }
+\State {$ V \gets \left\lbrace x \cdot \mathbf{b} + \text{Branch\&Bound}(\mathbf{B},\mathbf{t} - x \cdot \mathbf{b}):x \in X \right\rbrace $}
+\end{algorithmic}
 
 где $ \text{closest}(V, \mathbf{t}) $ выбирает вектор в $ V \subset \mathcal{L}(\mathbf{B}) $ ближайший к цели $ \mathbf{t} $.  
 
-Как и для жадного алгоритма, производительность метода Ветвей и Границ может быть произвольно плохой, если мы сперва не сократим базисы.
+Как и для жадного алгоритма, производительность (в данном случае время выполнения) метода Ветвей и Границ может быть очень низкой, если мы сперва не сократим базис входной решетки (например используя LLL-алгоритм).
 
-Сложность алгоритма заключается в нахождении множества $ X $. Его можно найти, используя выражение, выведенное в прошлом алгоритме: $ x = \frac{\left\langle t,b^* \right\rangle}{||b^*||^2} $. С помощью него мы найдем $ x $, который точно удовлетворяет множеству, а затем будет увеличивать/уменьшать до тех пор, пока выполняется условие $ || (\mathbf{t} - x\mathbf{b}) \perp \mathbf{B} || \leq || \mathbf{t} - \mathbf{v} || $.
+Сложность алгоритма заключается в нахождении множества $ X $. Его можно найти, используя выражение, выведенное в прошлом алгоритме: $ x = \frac{\left\langle \mathbf{t},\mathbf{b}^* \right\rangle}{||\mathbf{b}^*||^2} $. С помощью него мы найдем $ x $, который точно удовлетворяет множеству, а затем будем увеличивать/уменьшать до тех пор, пока выполняется условие $ || (\mathbf{t} - x\mathbf{b}) \perp \mathbf{B} || \leq || \mathbf{t} - \mathbf{v} || $.
 
 \subsection{Пример метода ветвей и границ}
+
+Рассмотрим пример на простой решетке $ \mathbf{B} = \left[\begin{array}{cccc}
+1 & 0 \\
+0 & 1
+\end{array}\right] $ и целевым вектором $ \mathbf{t} = \left[\begin{array}{cccc}
+1.6 \\
+1.6
+\end{array}\right] $.
+
+Представим входную матрицу в виде $ \left[\mathbf{B}, \mathbf{b}\right] $. На каждом шаге нам необходимо вычислять вектор $ \mathbf{b}^* = \mathbf{b} \perp \mathbf{B} $. Заранее вычислим их с помощью алгоритма Грама-Шмидта. В нашем случае вектора уже перпендикулярны друг другу. Смысл алгоритма также заключается в установлении одной координаты за раз, но вместо самого перспективного варианта мы будем строить множество $ X $, подходящее под условие $ |(\mathbf{t} - x\mathbf{b}) \perp \mathbf{B} | \leq | \mathbf{t} - \mathbf{v} | $. Вектор $ \mathbf{v} $ найдем с помощью жадного метода. Далее также, как и в жадном методе ищем необходимую сумму векторов, получим множество $ V $, из которого необходимо будет выбрать ближайший к цели $ \mathbf{t} $.
+
+$ \left[\mathbf{B}, \mathbf{b}\right] = \left[\begin{array}{cccc}
+1 & 0\\
+0 & 1
+\end{array}\right] $, $ \mathbf{t} = \left[\begin{array}{cccc}
+1.6 \\
+1.6
+\end{array}\right] $, $ \mathbf{b}^* = \left[\begin{array}{cccc}
+0 \\
+1
+\end{array}\right] $, $ \mathbf{v} = \left[\begin{array}{cccc}
+2 \\ 
+0
+\end{array}\right] $, $ X = \left\lbrace 2, 3, 1, 0 \right\rbrace $.
+
+Рекурсивно вызываем метод для каждого $ x \in X $, на вход отправляем $ \left[\mathbf{B}, \mathbf{b}\right] = \left[\begin{array}{cccc}
+1 \\
+0
+\end{array}\right] $, $ \mathbf{t} = \mathbf{t} - x \cdot \mathbf{b} $.
+
+Получаем множество $ V = \left\lbrace \left[\begin{array}{cccc}
+2 \\
+2
+\end{array}\right], \left[\begin{array}{cccc}
+2 \\
+3
+\end{array}\right], \left[\begin{array}{cccc}
+2 \\
+1
+\end{array}\right], \left[\begin{array}{cccc}
+2 \\
+0
+\end{array}\right] \right\rbrace$.
+
+Ближайший вектор будет равен $ \left[\begin{array}{cccc}
+2 \\
+2
+\end{array}\right] $ -- искомый вектор.
+
 
 \subsection{Сложность алгоритмов}
 
 \subsection{Обзор программной реализации}
+
+Программная реализация тестировалась в режиме сборки Release на ПК со следующими характеристиками: CPU: Intel(R) Core (TM) i5-9600KF CPU @ 3.70GHz, ОЗУ: DDR4, 16 ГБ (двухканальных режим 8х2), 2666 МГц. Производительность данных алгоритмов (особенно метода Ветвей и Границ) может быть невысокой из-за несокращенных базисов.
+
+\begin{table}[h]
+  \caption{Время работы Greedy}
+  \centering
+  \begin{tabular}{ | l | l | l |}
+  \hline
+  m & n & Время, сек   \\ \hline
+  3 & 3 & 0.0003 \\ \hline
+  7 & 7 & 0.0005 \\ \hline
+  12 & 12 & 0.0006 \\ \hline
+  16 & 16 & 0.0006 \\ \hline
+  50 & 50 & 0.001 \\ \hline
+  100 & 100 & 0.03 \\ \hline
+  500 & 500 & 0.3 \\ \hline
+  1000 & 1000 & 1.7 \\ \hline
+  \end{tabular}
+  \label{table:Greedy}
+\end{table}
+
+\begin{table}[h]
+  \caption{Время работы Branch and Bound}
+  \centering
+  \begin{tabular}{ | l | l | l |}
+  \hline
+  m & n & Время, сек   \\ \hline
+  3 & 3 & 0.0004 \\ \hline
+  7 & 7 & 0.03 \\ \hline
+  12 & 12 & 0.21 \\ \hline
+  16 & 12 & 0.72 \\ \hline
+  25 & 17 & 22.8 \\ \hline
+  \end{tabular}
+  \label{table:Branch and Bound}
+\end{table}
 
 \subsection{Применение}
 

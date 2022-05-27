@@ -13,8 +13,10 @@ namespace Algorithms
     }
     namespace CVP
     {
+        Eigen::VectorXd greedy_recursive(const Eigen::MatrixXd &matrix, const Eigen::VectorXd &target);
         Eigen::VectorXd greedy(const Eigen::MatrixXd &matrix, const Eigen::VectorXd &target);
         Eigen::VectorXd branch_and_bound(const Eigen::MatrixXd &matrix, const Eigen::VectorXd &target);
+        Eigen::VectorXd branch_and_bound_parallel(const Eigen::MatrixXd &matrix, const Eigen::VectorXd &target);
     }
     Eigen::MatrixXd gram_schmidt(const Eigen::MatrixXd &matrix, bool delete_zero_rows = true);
 }
