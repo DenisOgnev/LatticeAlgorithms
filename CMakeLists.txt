@@ -2,15 +2,14 @@ cmake_minimum_required(VERSION 3.0)
 project(LatticeAlgorithms)
 
 option(BUILD_DOCS "" OFF)
-option(BUILD_PARALLEL_BB "" OFF)
-option(BUILD_GMP "" OFF)
-
+option(BUILD_PARALLEL_BB "" ON)
+option(BUILD_GMP "" ON)
 
 file(GLOB SRC
      "src/*.cpp"
+     # "src/utils.cpp"
+     # "src/algorithms.cpp"
 )
-
-#set(BUILD_SHARED_LIBS FALSE)
 
 add_subdirectory(3rdparty/boost_config)
 add_subdirectory(3rdparty/boost_multiprecision)
@@ -18,6 +17,7 @@ add_subdirectory(3rdparty/boost_multiprecision)
 find_package(OpenMP REQUIRED)
 include_directories(${PROJECT_NAME} include)
 
+# add_library(${PROJECT_NAME} ${SRC})
 add_executable(${PROJECT_NAME} ${SRC})
 
 if (BUILD_PARALLEL_BB)

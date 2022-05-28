@@ -7,9 +7,30 @@
 \subsection{Ортогонализация Грама-Шмидта}
 
 Любой базис $ \mathbf{B} $ может быть преобразован в ортогональный базис для того же векторного пространства используя алгоритм ортогонализации Грама-Шмидта.
-Предположим у нас есть набор векторов $ \mathbf{B} = [\mathbf{b}_1, \ldots, \mathbf{b}_n] $, $ \mathbf{B} \in \mathbb{R}^{m \times n} $. Этот набор необзятельно ортогонален или даже линейно независим. Ортогонализацией этого набора векторов является набор векторов $ \mathbf{B}^* = [\mathbf{b}^*_1, \cdots, \mathbf{b}^*_n] \in \mathbb{R}^{m \times n} $, где $$ \mathbf{b}^*_i = \mathbf{b}_i - \sum_{i < j} \mu_{i, j} \mathbf{b}^*_j, \text{ где } \mu_{i, j} = \frac{\left\langle \mathbf{b}_i, \mathbf{b}^*_j \right\rangle}{\left\langle \mathbf{b}^*_i, \mathbf{b}^*_j \right\rangle}, i = 1, \ldots, n, j = 1, \ldots, i $$
+Предположим у нас есть набор векторов $ \mathbf{B} = [\mathbf{b}_1, \ldots, \mathbf{b}_n] $, $ \mathbf{B} \in \mathbb{R}^{m \times n} $. Этот набор необзятельно ортогонален или даже линейно независим. Ортогонализацией этого набора векторов является набор векторов $ \mathbf{B}^* = [\mathbf{b}^*_1, \cdots, \mathbf{b}^*_n] \in \mathbb{R}^{m \times n} $, где $$ \mathbf{b}^*_i = \mathbf{b}_i - \sum_{i < j} \mu_{i, j} \mathbf{b}^*_j, \text{ где } \mu_{i, j} = \frac{\left\langle \mathbf{b}_i, \mathbf{b}^*_j \right\rangle}{\left\langle \mathbf{b}^*_j, \mathbf{b}^*_j \right\rangle}, i = 1, \ldots, n, j = 1, \ldots, i $$
 
-Полученный набор векторов может не являться базисом для решетки, сгенерированной от исходного набора векторов, т.к. точки этой решетки могут не входить в решетку от ортогонализованного базиса. Этот набор также обладает важным свойством, которое мы будем использовать: если вектор $ \mathbf{b}^*_i = \mathbf{0} $, то этот вектор линейно зависим от других векторов в наборе и может быть представлен линейной комбинацией этих векторов. 
+Полученный набор векторов может не являться базисом для решетки, сгенерированной от исходного набора векторов, т.к. точки этой решетки могут не входить в решетку от ортогонализованного базиса. Этот набор также обладает важным свойством, которое мы будем использовать: если вектор $ \mathbf{b}^*_i = \mathbf{0} $, то этот вектор линейно зависим от других векторов в наборе и может быть представлен линейной комбинацией этих векторов.
+
+Для процесса ортогонализации Грама-Шмидта нельзя сделать параллельную реализацию, так как каждая следующая итерация требует данные, найденные на предыдущем шаге. Но можно ускорить ее нахождение, путем параллельного нахождения суммы $ \sum_{i < j} \mu_{i, j} \mathbf{b}^*_j $. Конечный алгоритм выглядит следующим образом:
+
+\begin{algorithmic}
+\Require{$ \mathbf{B} $} 
+\Ensure{$ \mathbf{GS} $}
+
+\State {$ \mathbf{GS} \gets \left[\ \right] $}
+\State {$ n \gets {\mathbf{B}.columns} $}
+\For {$ i \gets 0 $ to $ n $}
+	\State {$ \mathbf{b}_i \gets \mathbf{B}.column(i) $}
+	\State {$ \mathbf{projections} \gets \mathbf{0} $}
+	
+	\For {$ j \gets 0 $ to $ i $}
+		\State {$ \mathbf{b}_j \gets \mathbf{GS}.column(j) $}
+		\State {$ \mathbf{projections} \gets \mathbf{projections} + \mathbf{b}_j \cdot \frac{\left\langle \mathbf{b}_i, \mathbf{b}_j \right\rangle}{\left\langle \mathbf{b}_j, \mathbf{b}_j \right\rangle} $}
+	\EndFor
+	
+	\State {$ \mathbf{GS}.push\_back(\mathbf{b}_i - \mathbf{projections}) $}
+\EndFor
+\end{algorithmic}
 
 \subsection{Алгоритм для матриц с полным рангом строки}
 
@@ -347,24 +368,60 @@ $$ \left[\begin{array}{cccc}
 
 \subsection{Обзор программной реализации}
 
-Программная реализация тестировалась в режиме сборки Release на ПК со следующими характеристиками: CPU: Intel(R) Core (TM) i5-9600KF CPU @ 3.70GHz, ОЗУ: DDR4, 16 ГБ (двухканальных режим 8х2), 2666 МГц.
+В ходе работы была получена реализация с использованием библиотеки Boost.Multiprecision. Реализация находится в пространстве имен \verb!Algorithms::HNF! и состоит из 4 функций:
 
-\begin{table}[h]
+\begin{enumerate}
+
+\item \verb!HNF_full_row_rank(matrix)! $\rightarrow$ \verb!result_HNF! -- принимает на вход матрицу с полным рангом строки и возвращает ее ЭНФ. Использует встроенную реализацию больших чисел Boost.Multiprecision.
+
+\item \verb!HNF(matrix)! $\rightarrow$ \verb!result_HNF! -- принимает на вход матрицу и возвращает ее ЭНФ. Использует встроенную реализацию больших чисел Boost.Multiprecision.
+
+\item \verb!HNF_full_row_rank_GMP(matrix)! $\rightarrow$ \verb!result_HNF! -- принимает на вход матрицу с полным рангом строки и возвращает ее ЭНФ. Использует реализацию больших чисел от GMP.
+
+\item \verb!HNF_GMP(matrix)! $\rightarrow$ \verb!result_HNF! -- принимает на вход матрицу и возвращает ее ЭНФ. Использует реализацию больших чисел от GMP.
+
+\end{enumerate}
+
+Программная реализация тестировалась с использованием компилятора G++ версии 6.3.0 в режиме сборки Release на ПК со следующими характеристиками: CPU: Intel(R) Core (TM) i5-9600KF CPU @ 3.70GHz, ОЗУ: DDR4, 16 ГБ (двухканальных режим 8х2), 2666 МГц. Тестирование проводилось на одинаковых данных.
+
+\begin{table}[H]
   \caption{Время работы ЭНФ}
   \centering
   \begin{tabular}{ | l | l | l |}
   \hline
   m & n & Время, сек   \\ \hline
-  5 & 5 & 0.0008 \\ \hline
-  10 & 10 & 0.002 \\ \hline
-  25 & 25 & 0.88 \\ \hline
-  50 & 50 & 1.61 \\ \hline
-  75 & 75 & 8.4 \\ \hline
-  100 & 100 & 27.17 \\ \hline
-  200 & 100 & 62.35 \\ \hline
-  100 & 200 & 79.18 \\ \hline
+  5 & 5 & 0.001 \\ \hline
+  10 & 10 & 0.005 \\ \hline
+  17 & 17 & 0.05 \\ \hline
+  25 & 25 & 0.24 \\ \hline
+  35 & 35 & 1.03 \\ \hline
+  50 & 50 & 4.27 \\ \hline
+  75 & 75 & 23.2 \\ \hline
+  100 & 100 & 78.3 \\ \hline
+  100 & 125 & 117.1 \\ \hline
+  125 & 100 & 104.7 \\ \hline
   \end{tabular}
   \label{table:HNF}
+\end{table}
+
+\begin{table}[H]
+  \caption{Время работы ЭНФ с использованием GMP}
+  \centering
+  \begin{tabular}{ | l | l | l |}
+  \hline
+  m & n & Время, сек   \\ \hline
+  5 & 5 & 0.002 \\ \hline
+  10 & 10 & 0.01 \\ \hline
+  17 & 17 & 0.06 \\ \hline
+  25 & 25 & 0.22 \\ \hline
+  35 & 35 & 0.85 \\ \hline
+  50 & 50 & 3.35 \\ \hline
+  75 & 75 & 17.9 \\ \hline
+  100 & 100 & 59.6 \\ \hline
+  100 & 125 & 84 \\ \hline
+  125 & 100 & 71.23 \\ \hline
+  \end{tabular}
+  \label{table:HNF_GMP}
 \end{table}
 
 \subsection{Применение}

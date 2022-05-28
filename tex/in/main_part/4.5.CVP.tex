@@ -228,45 +228,103 @@ $ \left[\mathbf{B}, \mathbf{b}\right] = \left[\begin{array}{cccc}
 2
 \end{array}\right] $ -- искомый вектор.
 
+\subsection{Параллельная реализация метода ветвей и границ}
+
+Для получения параллельной реализации будем использовать задачи (task) из библиотеки OpenMP. После получения множества $ X $ нахождение множества подходящих векторов $ V $ можно получить параллельным образом, для каждого значения $ x \in X $ создавая свою задачу. Задачи помещаются в специальный пул задач, после чего свободные потоки берут задачи и выполняют работу параллельно. В качестве синхронизации используется директива \verb!#pragma omp taskwait!, она указывается перед вызовом \verb!closest(V, !\textbf{t}\verb!)!
 
 \subsection{Сложность алгоритмов}
 
 \subsection{Обзор программной реализации}
 
-Программная реализация тестировалась в режиме сборки Release на ПК со следующими характеристиками: CPU: Intel(R) Core (TM) i5-9600KF CPU @ 3.70GHz, ОЗУ: DDR4, 16 ГБ (двухканальных режим 8х2), 2666 МГц. Производительность данных алгоритмов (особенно метода Ветвей и Границ) может быть невысокой из-за несокращенных базисов.
+ Реализация находится в пространстве имен \verb!Algorithms::CVP! и состоит из 4 функций:
 
-\begin{table}[h]
-  \caption{Время работы Greedy}
+\begin{enumerate}
+
+\item \verb!greedy_recursive(matrix, vector)! $ \rightarrow $ \verb!vector! -- рекурсивный Greedy алгоритм, принимает на вход базис решетки и целевой вектор, возвращает вектор решетки, примерно ближайший к целевому.
+
+\item \verb!greedy(matrix, vector)! $ \rightarrow $ \verb!vector! -- последовательный Greedy алгоритм, принимает на вход базис решетки и целевой вектор, возвращает вектор решетки, примерно ближайший к целевому.
+
+\item \verb!branch_and_bound(matrix, vector)! $ \rightarrow $ \verb!vector! -- рекурсивный Branch and Bound алгоритм, принимает на вход базис решетки и целевой вектор, возвращает вектор решетки, ближайший к целевому.
+
+\item \verb!greedy_recursive(matrix, vector)! $ \rightarrow $ \verb!vector! -- параллельный рекурсивный Branch and Bound алгоритм, принимает на вход базис решетки и целевой вектор, возвращает вектор решетки, ближайший к целевому.
+
+
+\end{enumerate}
+
+Программная реализация тестировалась с использованием компилятора G++ версии 6.3.0 в режиме сборки Release на ПК со следующими характеристиками: CPU: Intel(R) Core (TM) i5-9600KF CPU @ 3.70GHz, ОЗУ: DDR4, 16 ГБ (двухканальных режим 8х2), 2666 МГц. Тестирование проводилось на одинаковых данных. Производительность данных алгоритмов (особенно метода Ветвей и Границ) может быть невысокой из-за несокращенных базисов.
+
+\begin{table}[H]
+  \caption{Время работы рекурсивного Greedy}
   \centering
   \begin{tabular}{ | l | l | l |}
   \hline
   m & n & Время, сек   \\ \hline
-  3 & 3 & 0.0003 \\ \hline
-  7 & 7 & 0.0005 \\ \hline
-  12 & 12 & 0.0006 \\ \hline
-  16 & 16 & 0.0006 \\ \hline
-  50 & 50 & 0.001 \\ \hline
-  100 & 100 & 0.03 \\ \hline
-  500 & 500 & 0.3 \\ \hline
-  1000 & 1000 & 1.7 \\ \hline
+  12 & 12 & 0.002 \\ \hline
+  20 & 20 & 0.003 \\ \hline
+  50 & 50 & 0.004 \\ \hline
+  100 & 100 & 0.006 \\ \hline
+  150 & 150 & 0.1 \\ \hline
+  250 & 250 & 0.027 \\ \hline
+  500 & 500 & 0.2 \\ \hline
+  1000 & 1000 & 0.9 \\ \hline
+  1500 & 1500 & 2.9 \\ \hline
+  2500 & 2500 & 13.4 \\ \hline
+  3500 & 3500 & 29.2 \\ \hline
+  5000 & 5000 & 78.8 \\ \hline
+  \end{tabular}
+  \label{table:Greedy_recursive}
+\end{table}
+
+\begin{table}[H]
+  \caption{Время работы последовательного Greedy}
+  \centering
+  \begin{tabular}{ | l | l | l |}
+  \hline
+  m & n & Время, сек   \\ \hline
+  12 & 12 & 0.002 \\ \hline
+  20 & 20 & 0.003 \\ \hline
+  50 & 50 & 0.004 \\ \hline
+  100 & 100 & 0.007 \\ \hline
+  150 & 150 & 0.01 \\ \hline
+  250 & 250 & 0.027 \\ \hline
+  500 & 500 & 0.2 \\ \hline
+  1000 & 1000 & 0.9 \\ \hline
+  1500 & 1500 & 2.9 \\ \hline
+  2500 & 2500 & 13.2 \\ \hline
+  3500 & 3500 & 29 \\ \hline
+  5000 & 5000 & 78.6 \\ \hline
   \end{tabular}
   \label{table:Greedy}
 \end{table}
 
-\begin{table}[h]
+\begin{table}[H]
   \caption{Время работы Branch and Bound}
   \centering
   \begin{tabular}{ | l | l | l |}
   \hline
   m & n & Время, сек   \\ \hline
-  3 & 3 & 0.0004 \\ \hline
-  7 & 7 & 0.03 \\ \hline
-  12 & 12 & 0.21 \\ \hline
-  16 & 12 & 0.72 \\ \hline
-  25 & 17 & 22.8 \\ \hline
+  3 & 3 & 0.002 \\ \hline
+  7 & 7 & 0.061 \\ \hline
+  11 & 11 & 9.4 \\ \hline
   \end{tabular}
-  \label{table:Branch and Bound}
+  \label{table:BB}
 \end{table}
+
+\begin{table}[H]
+  \caption{Время работы параллельного Branch and Bound}
+  \centering
+  \begin{tabular}{ | l | l | l |}
+  \hline
+  m & n & Время, сек   \\ \hline
+  3 & 3 & 0.001 \\ \hline
+  7 & 7 & 0.01 \\ \hline
+  11 & 11 & 1.6 \\ \hline
+  12 & 12 & 16.1 \\ \hline
+  13 & 13 & 91.2 \\ \hline
+  \end{tabular}
+  \label{table:BB_parallel}
+\end{table}
+
 
 \subsection{Применение}
 

@@ -226,16 +226,16 @@ namespace Algorithms
             /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
             // First way: just find linear combinations of deleted rows. More accurate
 
-            // Eigen::Matrix<mp::mpf_float_100, -1, -1> B_stroke_transposed = B_stroke.transpose().cast<mp::mpf_float_100>();
-            // auto QR = B_stroke.cast<mp::mpf_float_100>().colPivHouseholderQr().transpose();
+            // Eigen::Matrix<mp::mpf_float_50, -1, -1> B_stroke_transposed = B_stroke.transpose().cast<mp::mpf_float_50>();
+            // auto QR = B_stroke.cast<mp::mpf_float_50>().colPivHouseholderQr().transpose();
 
             // for (const auto &indx : deleted_indicies)
             // {
-            //     Eigen::Vector<mp::mpf_float_100, -1> vec = B.row(indx).cast<mp::mpf_float_100>();
-            //     Eigen::RowVector<mp::mpf_float_100, -1> x = QR.solve(vec);
+            //     Eigen::Vector<mp::mpf_float_50, -1> vec = B.row(indx).cast<mp::mpf_float_50>();
+            //     Eigen::RowVector<mp::mpf_float_50, -1> x = QR.solve(vec);
 
-            //     Eigen::Vector<mp::mpf_float_100, -1> res = x * HNF.cast<mp::mpf_float_100>();
-            //     for (mp::mpf_float_100 &elem : res) 
+            //     Eigen::Vector<mp::mpf_float_50, -1> res = x * HNF.cast<mp::mpf_float_50>();
+            //     for (mp::mpf_float_50 &elem : res) 
             //     {
             //         elem = mp::round(elem);
             //     }
