@@ -135,6 +135,134 @@ namespace Algorithms
             return t_HNF.cast<mp::cpp_int>();
             /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         }
+
+        #ifdef GMP
+        // Computes HNF of a integer matrix that is full row rank
+        // @return Eigen::Matrix<boost::multiprecision::mpz_int, -1, -1>
+        // @param B full row rank matrix
+        Eigen::Matrix<mp::mpz_int, -1, -1> HNF_full_row_rank_GMP(const Eigen::Matrix<mp::mpz_int, -1, -1> &B)
+        {
+            int m = static_cast<int>(B.rows());
+            int n = static_cast<int>(B.cols());
+
+            if (m > n)
+            {
+                throw std::invalid_argument("m must be less than or equal n");
+            }
+            if (m < 1 || n < 1)
+            {
+                throw std::invalid_argument("Matrix is not initialized");
+            }
+            if (B.isZero())
+            {
+                throw std::runtime_error("Matrix is empty");
+            }
+
+            Eigen::Matrix<mp::mpz_int, -1, -1> B_stroke;
+            Eigen::Matrix<mp::mpq_rational, -1, -1> ortogonalized;
+
+            std::tuple<Eigen::Matrix<mp::mpz_int, -1, -1>, Eigen::Matrix<mp::mpq_rational, -1, -1>> result_of_gs = Utils::get_linearly_independent_columns_by_gram_schmidt_GMP(B);
+            
+            std::tie(B_stroke, ortogonalized) = result_of_gs;
+
+            mp::mpq_rational t_det = 1.0;
+            for (const Eigen::Vector<mp::mpq_rational, -1> &vec : ortogonalized.colwise())
+            {
+                t_det *= vec.squaredNorm();
+            }
+            mp::mpz_int det = mp::sqrt(mp::numerator(t_det));
+
+            Eigen::Matrix<mp::mpz_int, -1, -1> H_temp = Eigen::Matrix<mp::mpz_int, -1, -1>::Identity(m, m) * det;
+
+            for (int i = 0; i < n; i++)
+            {
+                H_temp = Utils::add_column_GMP(H_temp, B.col(i));
+            }
+
+            Eigen::Matrix<mp::mpz_int, -1, -1> H(m, n);
+            H.block(0, 0, H_temp.rows(), H_temp.cols()) = H_temp;
+            if (n > m)
+            {
+                H.block(0, H_temp.cols(), H_temp.rows(), n - m) = Eigen::Matrix<mp::mpz_int, -1, -1>::Zero(H_temp.rows(), n - m);
+            }
+
+            return H;
+        }
+
+
+        // Computes HNF of an arbitrary integer matrix
+        // @return Eigen::Matrix<boost::multiprecision::mpz_int, -1, -1>
+        // @param B arbitrary matrix
+        Eigen::Matrix<mp::mpz_int, -1, -1> HNF_GMP(const Eigen::Matrix<mp::mpz_int, -1, -1> &B)
+        {
+            int m = static_cast<int>(B.rows());
+            int n = static_cast<int>(B.cols());
+
+            if (m < 1 || n < 1)
+            {
+                throw std::invalid_argument("Matrix is not initialized");
+            }
+            if (B.isZero())
+            {
+                throw std::runtime_error("Matrix is empty");
+            }
+
+            Eigen::Matrix<mp::mpz_int, -1, -1> B_stroke;
+            std::vector<int> indicies;
+            std::vector<int> deleted_indicies;
+            Eigen::Matrix<mp::mpq_rational, -1, -1> T;
+            std::tuple<Eigen::Matrix<mp::mpz_int, -1, -1>, std::vector<int>, std::vector<int>, Eigen::Matrix<mp::mpq_rational, -1, -1>> projection = Utils::get_linearly_independent_rows_by_gram_schmidt_GMP(B);
+            std::tie(B_stroke, indicies, deleted_indicies, T) = projection;
+
+            Eigen::Matrix<mp::mpz_int, -1, -1> B_double_stroke = HNF_full_row_rank_GMP(B_stroke);
+            
+            Eigen::Matrix<mp::mpz_int, -1, -1> HNF(B.rows(), B.cols());
+
+            for (int i = 0; i < indicies.size(); i++)
+            {
+                HNF.row(indicies[i]) = B_double_stroke.row(i);
+            }
+
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            // First way: just find linear combinations of deleted rows. More accurate
+
+            // Eigen::Matrix<mp::mpf_float_100, -1, -1> B_stroke_transposed = B_stroke.transpose().cast<mp::mpf_float_100>();
+            // auto QR = B_stroke.cast<mp::mpf_float_100>().colPivHouseholderQr().transpose();
+
+            // for (const auto &indx : deleted_indicies)
+            // {
+            //     Eigen::Vector<mp::mpf_float_100, -1> vec = B.row(indx).cast<mp::mpf_float_100>();
+            //     Eigen::RowVector<mp::mpf_float_100, -1> x = QR.solve(vec);
+
+            //     Eigen::Vector<mp::mpf_float_100, -1> res = x * HNF.cast<mp::mpf_float_100>();
+            //     for (mp::mpf_float_100 &elem : res) 
+            //     {
+            //         elem = mp::round(elem);
+            //     }
+            //     HNF.row(indx) = res.cast<mp::mpz_int>();
+            // }
+            // return HNF;
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            // Other, the "right" way that is desribed in algorithm.
+            Eigen::Matrix<mp::mpf_float_50, -1, -1> t_HNF = HNF.cast<mp::mpf_float_50>();
+            for (const auto &indx : deleted_indicies)
+            {
+                Eigen::Vector<mp::mpf_float_50, -1> res = Eigen::Vector<mp::mpf_float_50, -1>::Zero(B.cols());
+                for (int i = 0; i < indx; i++)
+                {
+                    res += T(indx, i).convert_to<mp::mpf_float_50>() * t_HNF.row(i);
+                }
+                
+                t_HNF.row(indx) = res;
+            }
+
+            return t_HNF.cast<mp::mpz_int>();
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        }
+        #endif
     }
 
 
@@ -147,6 +275,7 @@ namespace Algorithms
         Eigen::MatrixXd gram_schmidt_bb;
         Eigen::MatrixXd gram_schmidt_bb_parallel;
         
+
         // Recursive body of greedy algorithm
         // @return Eigen::VectorXd
         // @param target vector for which lattice point is being searched for
@@ -284,6 +413,18 @@ namespace Algorithms
         }
 
 
+        // Solves CVP using a branch and bound algorithm
+        // @return Eigen::VectorXd
+        // @param matrix input rational lattice basis that is linearly independent
+        // @param target vector for which lattice point is being searched for
+        Eigen::VectorXd branch_and_bound(const Eigen::MatrixXd &matrix, const Eigen::VectorXd &target)
+        {
+            gram_schmidt_bb = Algorithms::gram_schmidt(matrix, false);
+
+            return branch_and_bound_recursive_part(matrix, target);
+        }
+
+        #ifdef PARALLEL_BB
         // Recursive parallel body of branch and bound algorithm
         // @return Eigen::VectorXd
         // @param matrix input rational lattice basis that is linearly independent
@@ -363,17 +504,6 @@ namespace Algorithms
         }
 
 
-        // Solves CVP using a branch and bound algorithm
-        // @return Eigen::VectorXd
-        // @param matrix input rational lattice basis that is linearly independent
-        // @param target vector for which lattice point is being searched for
-        Eigen::VectorXd branch_and_bound(const Eigen::MatrixXd &matrix, const Eigen::VectorXd &target)
-        {
-            gram_schmidt_bb = Algorithms::gram_schmidt(matrix, false);
-
-            return branch_and_bound_recursive_part(matrix, target);
-        }
-
         // Solves CVP using a branch and bound parallel algorithm
         // @return Eigen::VectorXd
         // @param matrix input rational lattice basis that is linearly independent
@@ -384,6 +514,7 @@ namespace Algorithms
 
             return branch_and_bound_recursive_part_parallel(matrix, target);
         }
+        #endif
     }
 
 

@@ -7,7 +7,6 @@
 #include <boost/multiprecision/cpp_int.hpp>
 #include <boost/multiprecision/cpp_bin_float.hpp>
 #include <boost/multiprecision/cpp_dec_float.hpp>
-#include <stack>
 #include <boost/multiprecision/gmp.hpp>
 
 void print_HNF_last_col(const Eigen::Matrix<boost::multiprecision::cpp_int, -1, -1> &matrix)
@@ -64,30 +63,39 @@ int main()
 	// std::cout << "BB:\n" << bb << "\n\n";
 	// std::cout << "BB:\n" << bb1 << "\n\n";
 
-
-	boost::multiprecision::mpz_int a = 10;
-	std::cout << a << "\n\n";
-
 	// std::cout << "mat = \n" << mat << "\n" << "vec = \n" << vec << "\n\n";
 	// std::cout << greedy << "\n\n" << bb << "\n\n";
+
+	#ifdef FOO
+	std::cout << "FOO" << "\n\n";
+	#endif
+	std::cout << "TEST" << "\n\n";
 
 	return 0;
 }
 
 // int main()
 // {
-// 	int m = 150;
-// 	int n = 150;
+// 	int m = 75;
+// 	int n = 75;
 // 	int lowest = 1;
 // 	int highest = 10;
 
-// 	Eigen::Matrix<mp::cpp_int, -1, -1> mat = Utils::generate_random_matrix(m, n, lowest, highest);
+// 	Eigen::Matrix<mp::cpp_int, -1, -1> mat1 = Utils::generate_random_matrix(m, n, lowest, highest);
+// 	Eigen::Matrix<mp::mpz_int, -1, -1> mat2 = Utils::generate_random_matrix_GMP(m, n, lowest, highest);
 
 // 	double start = omp_get_wtime();
-// 	Eigen::Matrix<mp::cpp_int, -1, -1> HNF = Algorithms::HNF::HNF(mat);
+// 	Eigen::Matrix<mp::cpp_int, -1, -1> HNF1 = Algorithms::HNF::HNF(mat1);
 // 	double end = omp_get_wtime();
 
 // 	std::cout << end - start << "\n\n";
+
+// 	start = omp_get_wtime();
+// 	Eigen::Matrix<mp::mpz_int, -1, -1> HNF2 = Algorithms::HNF::HNF_GMP(mat2);
+// 	end = omp_get_wtime();
+
+// 	std::cout << end - start << "\n\n";
+
 
 // 	return 0;
 // }
