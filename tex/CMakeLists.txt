@@ -22,6 +22,3 @@ ADD_LATEX_DOCUMENT(main.tex
         in/main_part/4.5.CVP.tex
         in/main_part/4.6.overview_of_implementation.tex
 ) 
-
-# file(COPY ${PROJECT_BINARY_DIR}/main.pdf DESTINATION ${CMAKE_SOURCE_DIR}/docs)
-configure_file(${PROJECT_BINARY_DIR}/main.pdf ${CMAKE_SOURCE_DIR}/docs COPYONLY)
