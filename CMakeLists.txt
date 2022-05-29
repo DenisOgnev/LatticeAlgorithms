@@ -14,9 +14,10 @@ add_subdirectory(3rdparty/boost_config)
 add_subdirectory(3rdparty/boost_multiprecision)
 
 find_package(OpenMP REQUIRED)
-include_directories(${PROJECT_NAME} include)
 
 add_library(${PROJECT_NAME} ${SRC})
+
+target_include_directories(${PROJECT_NAME} PUBLIC include)
 
 if (BUILD_PARALLEL_BB)
      target_compile_definitions(${PROJECT_NAME} PRIVATE PARALLEL_BB)
