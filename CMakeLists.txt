@@ -20,11 +20,11 @@ add_library(${PROJECT_NAME} ${SRC})
 target_include_directories(${PROJECT_NAME} PUBLIC include)
 
 if (BUILD_PARALLEL_BB)
-     target_compile_definitions(${PROJECT_NAME} PRIVATE PARALLEL_BB)
+     target_compile_definitions(${PROJECT_NAME} PUBLIC PARALLEL_BB)
 endif(BUILD_PARALLEL_BB)
 
 if (BUILD_GMP)
-     target_compile_definitions(${PROJECT_NAME} PRIVATE GMP)
+     target_compile_definitions(${PROJECT_NAME} PUBLIC GMP)
 endif(BUILD_GMP)
 
 target_link_libraries(${PROJECT_NAME} OpenMP::OpenMP_CXX)
