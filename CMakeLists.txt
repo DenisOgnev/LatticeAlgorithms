@@ -3,7 +3,7 @@ project(LatticeAlgorithms)
 
 option(BUILD_DOCS "" OFF)
 option(BUILD_PARALLEL_BB "" OFF)
-option(BUILD_GMP "" ON)
+option(BUILD_GMP "" OFF)
 
 file(GLOB SRC
      "src/utils.cpp"
