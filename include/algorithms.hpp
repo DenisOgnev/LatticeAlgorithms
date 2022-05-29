@@ -3,7 +3,9 @@
 
 #include <Eigen/Dense>
 #include <boost/multiprecision/cpp_int.hpp>
+#ifdef GMP
 #include <boost/multiprecision/gmp.hpp>
+#endif
 
 namespace Algorithms
 {

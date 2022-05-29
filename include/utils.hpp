@@ -5,7 +5,9 @@
 #include <vector>
 #include <boost/multiprecision/cpp_int.hpp>
 #include <boost/multiprecision/cpp_bin_float.hpp>
+#ifdef GMP
 #include <boost/multiprecision/gmp.hpp>
+#endif
 
 namespace Utils
 {
