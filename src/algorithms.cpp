@@ -96,7 +96,7 @@ namespace Algorithms
                 HNF.row(indicies[i]) = B_double_stroke.row(i);
             }
 
-            /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            /////////////////////////////////////////////
             // First way: just find linear combinations of deleted rows. More accurate
 
             // Eigen::Matrix<mp::cpp_bin_float_double, -1, -1> B_stroke_transposed = B_stroke.transpose().cast<mp::cpp_bin_float_double>();
@@ -115,10 +115,10 @@ namespace Algorithms
             //     HNF.row(indx) = res.cast<mp::cpp_int>();
             // }
             // return HNF;
-            /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            /////////////////////////////////////////////
 
     
-            /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            /////////////////////////////////////////////
             // Other, the "right" way that is desribed in algorithm.
             Eigen::Matrix<mp::cpp_bin_float_double, -1, -1> t_HNF = HNF.cast<mp::cpp_bin_float_double>();
             for (const auto &indx : deleted_indicies)
@@ -133,7 +133,7 @@ namespace Algorithms
             }
 
             return t_HNF.cast<mp::cpp_int>();
-            /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            /////////////////////////////////////////////
         }
 
         #ifdef GMP
@@ -223,7 +223,7 @@ namespace Algorithms
                 HNF.row(indicies[i]) = B_double_stroke.row(i);
             }
 
-            /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            /////////////////////////////////////////////
             // First way: just find linear combinations of deleted rows. More accurate
 
             // Eigen::Matrix<mp::mpf_float_50, -1, -1> B_stroke_transposed = B_stroke.transpose().cast<mp::mpf_float_50>();
@@ -242,10 +242,10 @@ namespace Algorithms
             //     HNF.row(indx) = res.cast<mp::mpz_int>();
             // }
             // return HNF;
-            /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            /////////////////////////////////////////////
 
     
-            /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            /////////////////////////////////////////////
             // Other, the "right" way that is desribed in algorithm.
             Eigen::Matrix<mp::mpf_float_50, -1, -1> t_HNF = HNF.cast<mp::mpf_float_50>();
             for (const auto &indx : deleted_indicies)
@@ -260,7 +260,7 @@ namespace Algorithms
             }
 
             return t_HNF.cast<mp::mpz_int>();
-            /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            /////////////////////////////////////////////
         }
         #endif
     }
