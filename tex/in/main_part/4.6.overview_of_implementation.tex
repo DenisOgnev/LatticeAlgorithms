@@ -21,6 +21,276 @@
 
 \end{itemize}
 
-Программный проект автоматически собирается с помощью системы сборки CMake. Информация по сборке описана в README репозитория. По стандарту отключена сборка документа выпускной квалификационной работы.
+Проект автоматически собирается с помощью системы сборки CMake. Информация по сборке описана в README репозитория. По умолчанию отключена сборка документа выпускной квалификационной работы.
+
+Программная реализация тестировалась с использованием компилятора G++ версии 6.3.0 в режиме сборки Release на ПК со следующими характеристиками: CPU: Intel(R) Core (TM) i5-9600KF CPU @ 3.70GHz, ОЗУ: DDR4, 16 ГБ (двухканальных режим 8х2), 2666 МГц. Тестирование проводилось на одинаковых данных.
+
+\subsection{Нахождение ЭНФ}
+
+В ходе работы была получена реализация с использованием библиотеки Boost.Multiprecision. Реализация находится в пространстве имен \verb!Algorithms::HNF! и состоит из 4 функций:
+
+\begin{enumerate}
+
+\item \verb!HNF_full_row_rank(matrix)! $\rightarrow$ \verb!result_HNF! -- принимает на вход матрицу с полным рангом строки и возвращает ее ЭНФ. Использует встроенную реализацию больших чисел Boost.Multiprecision.
+
+\item \verb!HNF(matrix)! $\rightarrow$ \verb!result_HNF! -- принимает на вход матрицу и возвращает ее ЭНФ. Использует встроенную реализацию больших чисел Boost.Multiprecision.
+
+\item \verb!HNF_full_row_rank_GMP(matrix)! $\rightarrow$ \verb!result_HNF! -- принимает на вход матрицу с полным рангом строки и возвращает ее ЭНФ. Использует реализацию больших чисел от GMP.
+
+\item \verb!HNF_GMP(matrix)! $\rightarrow$ \verb!result_HNF! -- принимает на вход матрицу и возвращает ее ЭНФ. Использует реализацию больших чисел от GMP.
+
+\end{enumerate}
+
+\begin{table}[H]
+  \caption{Время работы ЭНФ}
+  \centering
+  \begin{tabular}{ | l | l | l | l | l | l | l | l | l | l | l | }
+  \hline
+  m & 5 & 10 & 17 & 25 & 35 & 50 & 75 & 100 & 100 & 125 \\ \hline
+  n & 5 & 10 & 17 & 25 & 35 & 50 & 75 & 100 & 125 & 100 \\ \hline
+  Время, сек & 0.001 & 0.005 & 0.05 & 0.24 & 1.03 & 4.27 & 23.2 & 78.3 & 117.1 & 104.7 \\ \hline
+  \end{tabular}
+  \label{table:HNF}
+\end{table}
+
+\begin{table}[H]
+  \caption{Время работы ЭНФ с использованием GMP}
+  \centering
+  \begin{tabular}{ | l | l | l | l | l | l | l | l | l | l | l | }
+  \hline
+  m & 5 & 10 & 17 & 25 & 35 & 50 & 75 & 100 & 100 & 125 \\ \hline
+  n & 5 & 10 & 17 & 25 & 35 & 50 & 75 & 100 & 125 & 100 \\ \hline
+  Время, сек & 0.002 & 0.01 & 0.06 & 0.22 & 0.85 & 3.35 & 17.9 & 59.6 & 84.2 & 71.23 \\ \hline
+  \end{tabular}
+  \label{table:HNF_GMP}
+\end{table}
+
+По временам видно, что чем больше размер входной матрицы, тем сильнее идет замедление по времени. На матрицах больших размеров следует использовать реализацию, которая использует библиотеку GMP.
+
+\subsection{Применение ЭНФ}
+
+Будут рассмотрены некоторые проблемы и задачи теории решеток и их решение с помощью ЭНФ.
+
+\textbf{Нахождение базиса.} Дан набор рациональных векторов $ \mathbf{B} $, необходимо вычислить базис для $ \mathcal{L}(\mathbf{B}) $. Проблема решается за полиномиальное время путем вычисления $ \text{ЭНФ}(\mathbf{B}) $: 
+
+$ \mathbf{B} = \left[\begin{array}{cccc}
+2 & 2 \\
+1 & 0
+\end{array}\right] $, 
+$ \text{ЭНФ}(\mathbf{B}) = \left[\begin{array}{cccc}
+2 & 0 \\
+0 & 1
+\end{array}\right] $.
+
+\textbf{Проблема эквивалентности.} Дано два базиса $ \mathbf{B} $ и $ \mathbf{B}' $. Необходимо узнать, образуют ли они однинаковую решетку $ \mathcal{L}(\mathbf{B}) = \mathcal{L}(\mathbf{B}') $. Проблема решается путем вычисления $ \text{ЭНФ}(\mathbf{B}) $ и $ \text{ЭНФ}(\mathbf{B}') $ и сравнения их равенства:
+
+$ \mathbf{B} = \left[\begin{array}{cccc}
+1 & 0 \\
+0 & 1
+\end{array}\right] $, 
+$ \mathbf{B}' = \left[\begin{array}{cccc}
+1 & 0 \\
+1 & 1
+\end{array}\right] $, 
+$ \text{ЭНФ}(\mathbf{B}) = \left[\begin{array}{cccc}
+1 & 0 \\
+0 & 1
+\end{array}\right] $,
+$ \text{ЭНФ}(\mathbf{B}') = \left[\begin{array}{cccc}
+1 & 0 \\
+0 & 1
+\end{array}\right] $ -- образуют одинаковую решетку.
+
+$ \mathbf{B} = \left[\begin{array}{cccc}
+1 & 0 \\
+0 & 1
+\end{array}\right] $, 
+$ \mathbf{B}' = \left[\begin{array}{cccc}
+2 & 2 \\
+1 & 0
+\end{array}\right] $, 
+$ \text{ЭНФ}(\mathbf{B}) = \left[\begin{array}{cccc}
+1 & 0 \\
+0 & 1
+\end{array}\right] $,
+$ \text{ЭНФ}(\mathbf{B}') = \left[\begin{array}{cccc}
+2 & 0 \\
+0 & 1
+\end{array}\right] $ -- не образуют одинаковой решетки.
+
+\textbf{Объединение решеток.} Дано два базиса $ \mathbf{B} $ и $ \mathbf{B}' $. Необходимо найти базис для наименьшей решетки, содержащей обе решетки $ \mathcal{L}(\mathbf{B}) $ и $ \mathcal{L}(\mathbf{B}') $. Такая решетка будет сгенерирована от $ \left[\mathbf{B}|\mathbf{B}'\right] $, и можно легко найти ее базис через ЭНФ:
+
+$ \mathbf{B} = \left[\begin{array}{cccc}
+2 & 2 \\
+1 & 0
+\end{array}\right] $, 
+$ \mathbf{B}' = \left[\begin{array}{cccc}
+0 & 1 \\
+2 & 2
+\end{array}\right] $, 
+$ \left[\mathbf{B} | \mathbf{B}'\right] = \left[\begin{array}{cccc}
+2 & 2 & 0 & 1 \\
+1 & 0 & 2 & 2
+\end{array}\right] $, 
+$ \text{ЭНФ}(\left[\mathbf{B} | \mathbf{B}' \right]) = \left[\begin{array}{cccc}
+1 & 0 & 0 & 0 \\
+0 & 1 & 0 & 0
+\end{array}\right] $.
+
+\textbf{Проблема включения.} Дано два базиса $ \mathbf{B} $ и $ \mathbf{B}' $. Необходимо узнать, является ли $ \mathcal{L}(\mathbf{B}') $ подрешеткой $ \mathcal{L}(\mathbf{B}) $, т.е. $ \mathcal{L}(\mathbf{B}') \subseteq \mathcal{L}(\mathbf{B}) $. Эта проблема сводится к проблемам объединения и эквивалентности: $ \mathcal{L}(\mathbf{B}') \subseteq \mathcal{L}(\mathbf{B}) $ тогда и только тогда, когда $ \mathcal{L}(\left[\mathbf{B}|\mathbf{B}'\right]) = \mathcal{L}(\mathbf{B}) $. Для этого необходимо вычислить $ \text{ЭНФ}(\left[\mathbf{B} | \mathbf{B}' \right]) $ и $ \text{ЭНФ}(\mathbf{B}) $ и сравнения их равенства:
+
+$ \mathbf{B} = \left[\begin{array}{cccc}
+2 & 2 \\
+1 & 0
+\end{array}\right] $, 
+$ \mathbf{B}' = \left[\begin{array}{cccc}
+1 & 0 \\
+0 & 1
+\end{array}\right] $, 
+$ \left[\mathbf{B} | \mathbf{B}'\right] = \left[\begin{array}{cccc}
+2 & 2 & 1 & 0 \\
+1 & 0 & 0 & 1
+\end{array}\right] $, 
+$ \text{ЭНФ}(\left[\mathbf{B} | \mathbf{B}' \right]) = \left[\begin{array}{cccc}
+1 & 0 & 0 & 0 \\
+0 & 1 & 0 & 0
+\end{array}\right] $,
+$ \text{ЭНФ}(\mathbf{B}) = \left[\begin{array}{cccc}
+2 & 0 \\
+0 & 1
+\end{array}\right] $ -- $ \mathcal{L}(\mathbf{B}') $ не является подрешеткой $ \mathcal{L}(\mathbf{B}) $.
+
+$ \mathbf{B} = \left[\begin{array}{cccc}
+1 & 0 \\
+0 & 1
+\end{array}\right] $, 
+$ \mathbf{B}' = \left[\begin{array}{cccc}
+2 & 2 \\
+1 & 0
+\end{array}\right] $, 
+$ \left[\mathbf{B} | \mathbf{B}'\right] = \left[\begin{array}{cccc}
+1 & 0 & 2 & 2 \\
+0 & 1 & 1 & 0
+\end{array}\right] $, 
+$ \text{ЭНФ}(\left[\mathbf{B} | \mathbf{B}' \right]) = \left[\begin{array}{cccc}
+1 & 0 & 0 & 0 \\
+0 & 1 & 0 & 0
+\end{array}\right] $,
+$ \text{ЭНФ}(\mathbf{B}) = \left[\begin{array}{cccc}
+1 & 0 \\
+0 & 1
+\end{array}\right] $ -- $ \mathcal{L}(\mathbf{B}') $ является подрешеткой $ \mathcal{L}(\mathbf{B}) $.
+
+\textbf{Проблема содержания.} Дана решетка $ \mathbf{B} $ и вектор $ \mathbf{v} $, необходимо узнать, принадлежит ли вектор решетке ($ \mathbf{v} \subseteq \mathcal{L}(\mathbf{B}') $). Эта проблема сводится к проблеме включения путем проверки $ \mathcal{L}(\left[\mathbf{v}\right]) \subseteq \mathcal{L}(\mathbf{B}) $. Если необходимо проверить содержание нескольких векторов $ \mathbf{v}_1, \ldots, \mathbf{v}_n $, тогда следует сначала вычислить $ \mathbf{H} = \text{ЭНФ}(\mathbf{B}) $, и затем проверять, равно ли $ \mathbf{H} $ $ \text{ЭНФ}(\left[\mathbf{H} | \mathbf{v}_i \right]) $ для каждого вектора:
+
+$ \mathbf{B} = \left[\begin{array}{cccc}
+2 & 2 \\
+1 & 0
+\end{array}\right] $, 
+$ \mathbf{v} = \left[\begin{array}{cccc}
+2 \\
+0
+\end{array}\right] $, 
+$ \left[\mathbf{B} | \mathbf{B}'\right] = \left[\begin{array}{cccc}
+2 & 2 & 2 \\
+1 & 0 & 0
+\end{array}\right] $, 
+$ \text{ЭНФ}(\left[\mathbf{B} | \mathbf{v} \right]) = \left[\begin{array}{cccc}
+2 & 0 & 0 \\
+0 & 1 & 0
+\end{array}\right] $,
+$ \text{ЭНФ}(\mathbf{B}) = \left[\begin{array}{cccc}
+2 & 0 \\
+0 & 1
+\end{array}\right] $ -- вектор $ \mathbf{v} \subseteq \mathcal{L}(\mathbf{B}) $.
+
+
+$ \mathbf{B} = \left[\begin{array}{cccc}
+2 & 2 \\
+1 & 0
+\end{array}\right] $, 
+$ \mathbf{v} = \left[\begin{array}{cccc}
+1 \\
+0
+\end{array}\right] $, 
+$ \left[\mathbf{B} | \mathbf{B}'\right] = \left[\begin{array}{cccc}
+2 & 2 & 1 \\
+1 & 0 & 0
+\end{array}\right] $, 
+$ \text{ЭНФ}(\left[\mathbf{B} | \mathbf{v} \right]) = \left[\begin{array}{cccc}
+1 & 0 & 0 \\
+0 & 1 & 0
+\end{array}\right] $,
+$ \text{ЭНФ}(\mathbf{B}) = \left[\begin{array}{cccc}
+2 & 0 \\
+0 & 1
+\end{array}\right] $ -- вектор $ \mathbf{v} \not \subseteq \mathcal{L}(\mathbf{B}) $.
+
+\subsection{Решение ПБВ}
+
+Реализация находится в пространстве имен \verb!Algorithms::CVP! и состоит из 4 функций:
+
+\begin{enumerate}
+
+\item \verb!greedy_recursive(matrix, vector)! $ \rightarrow $ \verb!vector! -- рекурсивный Greedy алгоритм, принимает на вход базис решетки и целевой вектор, возвращает вектор решетки, примерно ближайший к целевому.
+
+\item \verb!greedy(matrix, vector)! $ \rightarrow $ \verb!vector! -- последовательный Greedy алгоритм, принимает на вход базис решетки и целевой вектор, возвращает вектор решетки, примерно ближайший к целевому.
+
+\item \verb!branch_and_bound(matrix, vector)! $ \rightarrow $ \verb!vector! -- рекурсивный Branch and Bound алгоритм, принимает на вход базис решетки и целевой вектор, возвращает вектор решетки, ближайший к целевому.
+
+\item \verb!greedy_recursive(matrix, vector)! $ \rightarrow $ \verb!vector! -- параллельный рекурсивный Branch and Bound алгоритм, принимает на вход базис решетки и целевой вектор, возвращает вектор решетки, ближайший к целевому.
+
+\end{enumerate}
+
+
+\begin{table}[H]
+  \caption{Время работы рекурсивного Greedy}
+  \centering
+  \begin{tabular}{ | l | l | l | l | l | l | l | l | l | l | l | l | l | }
+  \hline
+  m & 12 & 20 & 50 & 100 & 150 & 250 & 500 & 1000 & 1500 & 2500 & 3500 & 5000 \\ \hline
+  n & 12 & 20 & 50 & 100 & 150 & 250 & 500 & 1000 & 1500 & 2500 & 3500 & 5000 \\ \hline
+  Время, сек & 0.002 & 0.003 & 0.004 & 0.006 & 0.1 & 0.027 & 0.2 & 0.9 & 2.9 & 13.4 & 29.2 & 78.8 \\ \hline
+  \end{tabular}
+  \label{table:Greedy_recursive}
+\end{table}
+
+\begin{table}[H]
+  \caption{Время работы нерекурсивного Greedy}
+  \centering
+  \begin{tabular}{ | l | l | l | l | l | l | l | l | l | l | l | l | l | }
+  \hline
+  m & 12 & 20 & 50 & 100 & 150 & 250 & 500 & 1000 & 1500 & 2500 & 3500 & 5000 \\ \hline
+  n & 12 & 20 & 50 & 100 & 150 & 250 & 500 & 1000 & 1500 & 2500 & 3500 & 5000 \\ \hline
+  Время, сек & 0.002 & 0.003 & 0.004 & 0.007 & 0.01 & 0.027 & 0.2 & 0.9 & 2.9 & 13.2 & 29 & 78.6 \\ \hline
+  \end{tabular}
+  \label{table:Greedy}
+\end{table}
+
+\begin{table}[H]
+  \caption{Время работы нерекурсивного Greedy}
+  \centering
+  \begin{tabular}{ | l | l | l | l | l | l | }
+  \hline
+  m & 3 & 7 & 9 & 11 & 15 \\ \hline
+  n & 3 & 7 & 9 & 11 & 11 \\ \hline
+  Время, сек & 0.002 & 0.061 & 1.65 & 9.4 & 20.2 \\ \hline
+  \end{tabular}
+  \label{table:BB}
+\end{table}
+
+\begin{table}[H]
+  \caption{Время работы параллельного Branch and Bound}
+  \centering
+  \begin{tabular}{ | l | l | l | l | l | l | l | }
+  \hline
+  m & 3 & 7 & 9 & 11 & 12 & 13 \\ \hline
+  n & 3 & 7 & 9 & 11 & 12 & 13 \\ \hline
+  Время, сек & 0.001 & 0.01 & 0.2 & 1.6 & 16.1 & 91.2 \\ \hline
+  \end{tabular}
+  \label{table:BB_parallel}
+\end{table}
+
+По временам видна заметная разница в скорости выполнения алгоритмов. Можно заметить, что сложность точного вычисления ПБВ сильно растет с увеличением количества столбцов базиса.
 
 \clearpage

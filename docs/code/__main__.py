@@ -10,8 +10,8 @@ from utils import generate_random_array, generate_random_linearly_independent_fl
 def HNF_problem():
 
     # n >= m, if matrix should be full row rank
-    m = 3  # size of vector
-    n = 3  # number of vectors
+    m = 9  # size of vector
+    n = 9  # number of vectors
     lowest = 0
     highest = 6
 
@@ -42,8 +42,8 @@ def HNF_problem():
     # print("HNF(B).T = \n{}\n".format(H.T))
     # print("HNF(B) from wolfram alpha = \n{}".format(H_str))
 
-    m = 3  # size of vector
-    n = 5  # number of vectors
+    m = 8  # size of vector
+    n = 8  # number of vectors
     lowest = 0
     highest = 6
 
@@ -195,8 +195,8 @@ def main():
     # union_of_lattices_problem_HNF()
     # containtment_problem_HNF()
     # membership_problem_HNF()
-    # HNF_problem()
-    CVP_problem()
+    HNF_problem()
+    # CVP_problem()
 
 
 if __name__ == '__main__':

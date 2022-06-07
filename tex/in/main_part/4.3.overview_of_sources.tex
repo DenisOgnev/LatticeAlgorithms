@@ -37,7 +37,7 @@ a_{m1} & a_{m2} & \cdots & a_{mn}
 Решетка - пусть $ \mathbf{B} = [\mathbf{b}_1, \ldots, \mathbf{b}_n] \in \mathbb{R}^{d \times n} $ - линейно независимые вектора из $ \mathbb{R}^d $. Решетка, генерируемая от $\mathbf{B}$ есть множество $$ \mathcal{L}(\mathbf{B}) = \lbrace \mathbf{Bx}: \mathbf{x} \in \mathbb{Z}^n \rbrace = \left\{ \sum\limits_{i=1}^n x_i \cdot \mathbf{b}_i: \forall i \ x_i \in \mathbb{Z} \right\} $$
 всех целочисленных линейных комбинаций столбцов матрицы $\mathbf{B}$. Матрица $\mathbf{B}$ называется базисом для решетки $\mathcal{L}(\mathbf{B})$. Число $n$ называется рангом решетки. Если $n = d$, то решетка $\mathcal{L}(\mathbf{B})$ называется решеткой полного ранга или полноразмерной решеткой в $\mathbb{R}^d$. 
 
-Определитель решетки - пусть $ \mathbf{B} = \left[\mathbf{b}_1, \ldots, \mathbf{n}_n \right] $ - базис решетки, $ \mathbf{B}^* = \left[\mathbf{b}^*_1, \ldots, \mathbf{n}^*_n \right] $ - ортогонализация Грама-Шмидта для исходного базиса. Определитель $\mathrm{det} = \prod_i ||\mathbf{b}^*_i||$. Определитель решетки не зависит от выбора исходного базиса.
+Определитель решетки - пусть $ \mathbf{B} = \left[\mathbf{b}_1, \ldots, \mathbf{n}_n \right] $ - базис решетки, $ \mathbf{B}^* = \left[\mathbf{b}^*_1, \ldots, \mathbf{n}^*_n \right] $ - ортогонализация Грама-Шмидта для исходного базиса, тогда определитель $\mathrm{det} = \prod_i ||\mathbf{b}^*_i||$. Определитель решетки не зависит от выбора исходного базиса.
 
 Эрмитова нормальная форма - невырожденная матрица $ \mathbf{B}=\left[\mathbf{b}_1, \ldots, \mathbf{b}_n\right] \in \mathbb{R}^{m \times n}\ $ является Эрмитовой нормальной формой, если
 
@@ -48,5 +48,582 @@ a_{m1} & a_{m2} & \cdots & a_{mn}
 
 Проблема ближайшего вектора - дан базис решетки $ \mathbf{B} \in \mathbb{R}^{d \times n} $ и целевой вектор $ \mathbf{t} \in \mathbb{R}^d $, который не принадлежит решетке, необходимо найти точку решетки $ \mathbf{Bx} $ ($ \mathbf{x} \in \mathbb{Z}^n $) такую, что расстояние $ ||\mathbf{t} - \mathbf{Bx}|| $ минимально. 
 
+\subsection{Ортогонализация Грама-Шмидта}
+
+Любой базис $ \mathbf{B} $ может быть преобразован в ортогональный базис для того же векторного пространства используя алгоритм ортогонализации Грама-Шмидта.
+Предположим у нас есть набор векторов $ \mathbf{B} = [\mathbf{b}_1, \ldots, \mathbf{b}_n] $, $ \mathbf{B} \in \mathbb{R}^{m \times n} $. Этот набор необзятельно ортогонален или даже линейно независим. Ортогонализацией этого набора векторов является набор векторов $ \mathbf{B}^* = [\mathbf{b}^*_1, \cdots, \mathbf{b}^*_n] \in \mathbb{R}^{m \times n} $, где $$ \mathbf{b}^*_i = \mathbf{b}_i - \sum_{i < j} \mu_{i, j} \mathbf{b}^*_j, \text{ где } \mu_{i, j} = \frac{\left\langle \mathbf{b}_i, \mathbf{b}^*_j \right\rangle}{\left\langle \mathbf{b}^*_j, \mathbf{b}^*_j \right\rangle}, i = 1, \ldots, n, j = 1, \ldots, i $$
+
+Полученный набор векторов может не являться базисом для решетки, сгенерированной от исходного набора векторов, т.к. точки этой решетки могут не входить в решетку от ортогонализованного базиса. Этот набор также обладает важным свойством, которое мы будем использовать: если вектор $ \mathbf{b}^*_i = \mathbf{0} $, то этот вектор линейно зависим от других векторов в наборе и может быть представлен линейной комбинацией этих векторов.
+
+Временная сложность алгоритма $ \mathrm{O(n^3)} $, т.к. у нас имеется цикл, вложенный в цикл, в котором 2 скалярных произведения и сумма векторов. Для процесса ортогонализации Грама-Шмидта нельзя сделать параллельную реализацию, так как каждая следующая итерация требует данные, найденные на предыдущем шаге. Но можно ускорить ее нахождение, путем параллельного нахождения суммы $ \sum_{i < j} \mu_{i, j} \mathbf{b}^*_j $. Конечный алгоритм выглядит следующим образом:
+
+\begin{algorithmic}
+\Require{$ \mathbf{B} $} 
+\Ensure{$ \mathbf{GS} $}
+
+\State {$ \mathbf{GS} \gets \left[\ \right] $}
+\State {$ n \gets {\mathbf{B}.columns} $}
+\For {$ i \gets 0 $ to $ n $}
+	\State {$ \mathbf{b}_i \gets \mathbf{B}.column(i) $}
+	\State {$ \mathbf{projections} \gets \mathbf{0} $}
+	
+	\For {$ j \gets 0 $ to $ i $}
+		\State {$ \mathbf{b}_j \gets \mathbf{GS}.column(j) $}
+		\State {$ \mathbf{projections} \gets \mathbf{projections} + \mathbf{b}_j \cdot \frac{\left\langle \mathbf{b}_i, \mathbf{b}_j \right\rangle}{\left\langle \mathbf{b}_j, \mathbf{b}_j \right\rangle} $}
+	\EndFor
+	
+	\State {$ \mathbf{GS}.push\_back(\mathbf{b}_i - \mathbf{projections}) $}
+\EndFor
+\end{algorithmic}
+
+\subsection{Алгоритм нахождения ЭНФ для матриц с полным рангом строки}
+
+Дана матрица $ \mathbf{B} \in \mathbb{Z}^{m \times n} $. Основная идея состоит в том, чтобы найти ЭНФ $ \mathbf{H} $ подрешетки от $ \mathcal{L}(\mathbf{B}) $, и затем обновлять $ \mathbf{H} $, включая столбцы $ \mathbf{B} $ один за другим. Предположим, что у нас есть процедура AddColumn, которая работает за полиномиальное время и принимает на вход квадратную невырожденную ЭНФ матрицу $ \mathbf{H} \in \mathbb{Z}^{m \times m} $ и вектор $ \mathbf{b} \in \mathbb{Z}^{m}$, а возвращает ЭНФ матрицы $ [\mathbf{H|b}] $. Такая процедура должна следить, чтоб выходная матрица подоходила под определение ЭНФ, что будет показано в описании этой процедуры. ЭНФ от $ \mathbf{B} $ может быть вычислено следующим образом:
+\begin{enumerate}
+\item Применить алгоритм Грама-Шмидта к столбцам $ \mathbf{B} $, чтобы найти $ m $ линейно независимых столбцов. Пусть $ \mathbf{B}' $ - матрица размера $ m \times m $, заданная этими столбцами.
+\item Вычислить $ d=\mathrm{det}(\mathbf{B}') $, используя алгоритм Грама-Шмидта или любую другую процедуру с полиномиальным временем. Пусть $ \mathbf{H}_0=d \cdot \mathbf{I} $ будет диагональной матрицей с $ d $ на диагонали.
+\item Для $ i=1, \ldots ,n $ пусть $ \mathbf{H}_i $ -- результат применения AddColumn к входным $  \mathbf{H}_{i-1}\ $ и $ \mathbf{b}_i $.
+\item Вернуть $ \mathbf{H}_n $.
+\end{enumerate}
+
+Разберем подпункты:
+
+\begin{enumerate}
+\item Необходимо найти линейно независимые столбцы матрицы. Их количество всегда будет равно $ m $, т.к. наша матрица полного ранга строки и ранг матрицы равен $ m $, а значит матрица, состоящая из этих столбцов, будет размера $ m \times m $. Для нахождения этих строк можно использовать алгоритм ортогонализации Грама-Шмитда: если $ \mathbf{b}_i^*=\mathbf{0} $, то $ i $-ая строка является линейной комбинацией других строк, и ее необходимо удалить. Реализация данного алгоритма находится в пространстве имен Utils в функции \verb! get_linearly_independent_!\\ \verb!columns_by_gram_schmidt!. Полученная матрица будет названа $  \mathbf{B}' $.
+\item Необходимо вычислить $ d $, будем вычислять его по следующей форумле: $ d=\sqrt{\prod_i{\|\mathbf{b}_i^\ast\|^2}} $ - сумма произведений квадратов длин всех столбцов, полученных после применения ортогонализации Грама-Шмидта. Матрица $ \mathbf{H}_\mathbf{0} $ будет единичной матрицей размера $ m \times m $, умноженной на определитель. В результате все диагональные элементы будут равны $ d $.
+\item Применяем AddColumn (реализация находится в функции \verb!add_column!) к $ \mathbf{H}_0 $ и первому столбцу матрицы $ \mathbf{B} - \mathbf{b}_0 $, получаем $ \mathbf{H}_1 $; повторяем для всех оставшихся столбцов, получаем $ \mathbf{H}_n $.
+\item $ \mathbf{H}_n $ является ЭНФ($ \mathbf{B} $).
+\end{enumerate}
+
+Алгоритм AddColumn на вход принимает квадратную невырожденную ЭНФ матрицы $ \mathbf{H} \in \mathbb{Z}^{m \times m} $ и вектор $ \mathbf{b} \in \mathbb{Z}^m $ и работает следующим образом. Если $ m = 0 $, то возвращаем $ \mathbf{H} $. В противном случае, пусть 
+$ \mathbf{H} = \left[ \begin{array}{cccc}
+\mathrm{a} & \mathbf{0}^\mathrm{T} \\
+\mathbf{h} & \mathbf{H}' \end{array} \right] $ и 
+$ \mathbf{b} = \left[ \begin{array}{cccc}
+\mathrm{b} \\
+\mathbf{b}' \end{array} \right] $ и дальше:
+
+\begin{enumerate}
+\item Вычислить $ \mathrm{g}=\text{НОД}⁡(\mathrm{a, b}) $ и целые $ \mathrm{x, y} $ такие, что $ \mathrm{xa+yb=g} $, используя расширенный НОД алгоритм.
+\item Применить унимодулярное преобразование 
+$ \mathbf{U}=\left[ \begin{array}{cccc}
+\mathrm{x} & \mathrm{(\text{-}b/g)} \\ 
+\mathrm{y} & \mathrm{(a/g)} \end{array} \right] $ к первому столбцу из $ \mathbf{H} $ и $ \mathbf{b} $ чтобы получить 
+$ \left[ \begin{array}{cccc}
+\mathrm{a} & \mathrm{b} \\
+\mathbf{h} & \mathbf{b}' \end{array} \right] \mathbf{U}=
+\left[ \begin{array}{cccc}
+\mathrm{g} & \mathrm{0} \\
+\mathbf{h}' & \mathbf{b}'' \end{array} \right] $ 
+\item Добавить соответствующий вектор из $ \mathcal{L}\left(\mathbf{H}'\right) $ к $ \mathbf{b}'' $, чтобы сократить его элементы по модулю диагональных элементов из $ \mathbf{H}' $.
+\item Рекурсивно вызвать AddColumn на вход $ \mathbf{H}' $ и $ \mathbf{b}'' $ чтобы получить матрицу $ \mathbf{H}'' $.
+\item Добавить соответствующий вектор из $ \mathcal{L}\left(\mathbf{H}''\right) $ к $ \mathbf{h}' $ чтобы сократить его элементы по модулю диагональных элементов из $ \mathbf{H}'' $.
+\item Вернуть $ \left[\begin{array}{cccc}
+\mathrm{g} & \mathbf{0}^\mathrm{T} \\
+\mathbf{h}' & \mathbf{H}'' 
+\end{array}\right] $ 
+
+\end{enumerate}
+
+Разберем подпункты:
+
+\begin{enumerate}
+\item Функция extended\_gcd принимает $ \mathrm{a, b} $ , вычисляет наибольший общий делитель и целые $ \mathrm{x, y} $ такие, что $ \mathrm{xa + yb = g} $
+\item Составляем матрицу $ \mathbf{U}= \left[\begin{array}{cccc}
+\mathrm{x} & \mathrm{(\text{-}b/g)} \\
+\mathrm{y} & \mathrm{(a/g)} \end{array}\right] $ и умножаем ее на матрицу, составленную из первого столбца $ \mathbf{H} $ и столбца $ \mathbf{b} $, чтобы получить
+$$ \left[\begin{array}{cccc}
+\mathrm{a} & \mathrm{b} \\
+\mathbf{h} & \mathbf{b}' \end{array}\right] \mathbf{U}=
+\left[\begin{array}{cccc}
+\mathrm{g} & \mathrm{0} \\
+\mathbf{h}' & \mathbf{b}'' \end{array}\right] $$
+\item Функция \verb!reduce! принимает на вход матрицу и вектор, получает необходимый вектор из решетки от матрицы на входе, чтобы сократить элементы вектора по модулю диагональных элементов из матрицы. Применяем функцию \verb!reduce! к $ \mathbf{H}' $ и $ \mathbf{b} $
+\item Рекурсивно вызываем AddColumn, на вход отправляем $ \mathbf{H}' $ и $ \mathbf{b}'' $  получаем матрицу $ \mathbf{H}'' $.
+\item Вызываем функцию \verb!reduce! к $ \mathbf{H}'' $ и $ \mathbf{h}' $
+\item Составляем необходимую матрицу и возвращаем $ \left[\begin{array}{cccc}
+\mathrm{g} & \mathbf{0}^\mathrm{T} \\
+\mathbf{h}' & \mathbf{H}'' \end{array}\right] $
+\end{enumerate}
+
+\subsection{Общий алгоритм нахождения ЭНФ для любых матриц}
+
+\begin{enumerate}
+\item Запустить процесс ортогонализации Грама-Шмидта к строкам $ \mathbf{r}_1, \ldots, \mathbf{r}_m $ из $ \mathbf{B} $, и пусть $ \mathrm{K}=\left\{\mathrm{k}_1, \ldots, \mathrm{k}_l \right\}(\mathrm{k}_1< \ldots <\mathrm{k}_l) $ – это множество индексов, такое, что $ \mathbf{r}_{\mathrm{k}_i}^\ast \neq \mathbf{0} $. Определим операцию проецирования $ \prod_\mathrm{K}:\mathbb{R}^m \rightarrow \mathbb{R}^l $ при $ [\prod_\mathrm{K}(\mathbf{x})]_i = \mathrm{x}_{\mathrm{k}_i} $. Заметим, что строки $ \mathbf{r}_\mathrm{k}\ (\mathrm{k} \in \mathrm{K}) $ линейно независимы и любая строка $ \mathbf{r}_i\ (i \in \mathrm{K}) $ может быть выражена как линейная комбинация предыдущих строк $ \mathbf{r}_j\left(\left\{j \in \mathrm{K}:j<i \right\}\right) $. Следовательно, операция проецирования $ \prod_\mathrm{K} $ однозначно определена, когда ограничена к $ \mathcal{L}(\mathbf{B})$ , и ее инверсия может быть легко вычислена, используя коэффициенты Грама-Шмидта $ \mu_{i,j} $.
+\item Введем матрицу $ \mathbf{B}'=\prod_\mathrm{K}(\mathbf{B}) $, которая полного ранга (т.к. все строки линейно независимы), и запустим алгоритм для матриц полного ранга строки, чтобы найти ЭНФ $ \mathbf{B}'' $ от $ \mathbf{B}' $.
+\item Применить функцию, обратную операции проецирования, $ \prod_\mathrm{K}^{\text{-}1} $ к ЭНФ $ \mathbf{B}'' $, чтобы получить матрицу $ \mathbf{H} $, которая является ЭНФ матрицы $ \mathbf{B} $.
+\end{enumerate}
+
+Алгоритм прост, но нужно обратить внимание на операцию проецирования и обратную к ней. Для того, чтобы находить результат проецирования напишем функцию \verb! get_linearly_! \\ \verb!independent_rows_by_gram_schmidt!, которая будет возвращать матрицу $ \mathbf{B}' $, состоящую из линейно независимых строк, а также массив индексов этих строк из исходного массива. К матрице $ \mathbf{B}' $ применяется алгоритм нахождения ЭНФ для матриц с полным рангом, разобранный в прошлом разделе. Далее необходимо восстановить удаленные строки. Т.к. они являются линейной комбинацией линейно независимых строк, то мы можем найти коэффициенты, на которые нужно умножить строки из матрицы $ \mathbf{B}' $ и после чего сложить их, чтобы получить нужную строку, которую необходимо добавить к $ \mathbf{B}' $.
+
+Количество рекурсивных вызовов будет равно $ n \cdot m $, т.к. мы вызываем процедуру AddColumn для каждого столбца ($ n $) и для каждого столбца рекурсивно вызываем ее до тех пор, пока количество строк ($ m $) не будет равно нулю.
+
+\subsection{Пример нахождения ЭНФ}
+
+Рассмотрим нахождение ЭНФ на примере небольшой матрицы размера $ 2 \times 2 $. Получим случайную матрицу $ \mathbf{B} =
+\left[ \begin{array}{cccc}
+\mathbf{b}^{\mathbf{T}}_1 \\
+\vdots \\
+\mathbf{b}^{\mathbf{T}}_m
+\end{array} \right]
+=
+\left[ \begin{array}{cccc}
+2 & 4 \\
+1 & 4
+\end{array} \right] $. Т.к. мы получаем случайную матрицу, то не можем заранее знать, матрица с полного ранга строки или нет, поэтому будем использовать общий алгоритм. Первый шаг алгоритма требует от нас найти $ l $ линейно независимых строк матрицы $ \mathbf{B} $, используя алгоритм ортогонализации Грама-Шмидта. Обозначим искомую ортогонализацию строк за $ \mathbf{B}^* = \left[ \begin{array}{cccc}
+\mathbf{b}^{\mathbf{T}*}_1 \\
+\vdots \\
+\mathbf{b}^{\mathbf{T}*}_m
+\end{array} \right] $ и найдем их:
+
+\begin{enumerate}
+
+\item $ \mathbf{b}^{\mathbf{T}*}_1 = \mathbf{b}^{\mathbf{T}}_1 + \sum\limits_{j < 1} \mu_{1, j}\mathbf{b}^{\mathbf{T}*}_j = \mathbf{b}^{\mathbf{T}}_1 = \left[ \begin{array}{cccc}
+2 & 4
+\end{array}
+\right]$
+
+\item $ \mathbf{b}^{\mathbf{T}*}_2 = \mathbf{b}^{\mathbf{T}}_2 + \sum\limits_{j < 2} \mu_{2, j}\mathbf{b}^{\mathbf{T}*}_j = \mathbf{b}^{\mathbf{T}}_2 + \frac{\left\langle \mathbf{b}^{\mathbf{T}}_2, \mathbf{b}^{\mathbf{T}*}_1 \right\rangle}{\left\langle \mathbf{b}^{\mathbf{T}*}_1, \mathbf{b}^{\mathbf{T}*}_1 \right\rangle} \mathbf{b}^{\mathbf{T}*}_1 = \left[ \begin{array}{cccc}
+-\frac{4}{5} & \frac{2}{5}
+\end{array}
+\right]$
+
+\end{enumerate}
+
+Нулевых строк нет, значит матрица $ \mathbf{B} $ полностью состоит из линейно независимых строк, и матрица $ \mathbf{B}' $ будет содержать в себе все строки из $ \mathbf{B} $. Далее алгоритм требует от нас найти ЭНФ от матрицы $ \mathbf{B}' $, используя алгоритм для полного ранга строки.
+
+Рассмотрим алгоритм для полного ранга строки. Алгоритм принимает на вход матрицу $ \mathbf{B} = \left[ \mathbf{b}_1, \ldots, \mathbf{b}_n \right] =
+\left[ \begin{array}{cccc}
+2 & 4 \\
+1 & 4
+\end{array} \right] $. Требуется найти $ m $ линейно независимых строк, используя алгоритм Грама-Шмидта. Используем алгоритм Грама-Шмидта на строки $ \mathbf{B} $:
+
+\begin{enumerate}
+
+\item $ \mathbf{b}^*_1 = \mathbf{b}_1 + \sum\limits_{j < 1} \mu_{1, j}\mathbf{b}^*_j = \mathbf{b}_1 = \left[ \begin{array}{cccc}
+2 \\ 
+1 
+\end{array}
+\right]$
+
+\item $ \mathbf{b}^*_2 = \mathbf{b}^{\mathbf{T}}_2 + \sum\limits_{j < 2} \mu_{2, j}\mathbf{b}^*_j = \mathbf{b}_2 + \frac{\left\langle \mathbf{b}_2, \mathbf{b}^*_1 \right\rangle}{\left\langle \mathbf{b}^*_1, \mathbf{b}^*_1 \right\rangle} \mathbf{b}^*_1 = \left[ \begin{array}{cccc}
+-\frac{4}{5} \\
+\frac{8}{5}
+\end{array}
+\right]$
+
+\end{enumerate}
+
+Т.к. матрица полного ранга строки, ее ранг меньше либо равен количеству столбцов и равен количеству строк $ m $. Используя алгоритм Грама-Шмидта на столбцы матрицы мы удаляем линейно зависимые столбцы, и т.к. количество столбцов больше либо равно количества строк, то количество столбцов становится равно количеству строк. Получаем матрицу $ \mathbf{B}' = \left[\begin{array}{cccc}
+2 & 4 \\
+1 & 4
+\end{array}\right] $ размера $ m \times m $, состоящую из линейно независимых столбцов матрицы $ \mathbf{B} $.
+
+Далее необходимо составить матрицу $ \mathbf{H}_0 $. Для этого необходимо найти определитель решетки $ d = \sqrt{(5 \cdot \frac{16}{5})} = 4 $ и умножить единичную матрицу размера $ m \times m $ на $ d $. 
+
+Для $ i = 1, \ldots, n $ используем AddColumn для каждого $ \mathbf{H}_{i - 1} $ и $ \mathbf{b}_i $:
+\begin{enumerate}
+
+\item $ \mathbf{H} = \left[\begin{array}{cccc}
+4 & 0 \\
+0 & 4
+\end{array}\right] $, $ \mathrm{a} = 4 $, $ \mathbf{h} = \left[\begin{array}{cccc}
+0 
+\end{array}\right] $, $ \mathbf{H}' = \left[ \begin{array}{cccc}
+4
+\end{array}\right] $, $ \mathbf{b} = \left[\begin{array}{cccc}
+2 \\
+1
+\end{array}\right] $, $ \mathrm{b} = 2 $, $ \mathbf{b}' = \left[ \begin{array}{cccc}
+1
+\end{array}\right] $
+
+Используем расширенный НОД алгоритм, находим $ \mathrm{g} = 2 $, $ \mathrm{x} = 0 $, $ \mathrm{y} = 1 $. Составляем матрицу $  \mathbf{U} = \left[\begin{array}{cccc}
+0 & -1 \\
+1 & 2
+\end{array}\right] $, умножаем матрицу, составленную из первого столбца $ \mathbf{H} $ и столбца $ \mathbf{b} $ на матрицу $ \mathbf{U} $: $ \left[ \begin{array}{cccc}
+\mathrm{a} & \mathrm{b} \\
+\mathbf{h} & \mathbf{b}' \end{array} \right] \mathbf{U}=
+\left[ \begin{array}{cccc}
+\mathrm{g} & \mathrm{0} \\
+\mathbf{h}' & \mathbf{b}'' \end{array} \right] = \left[\begin{array}{cccc}
+2 & 0 \\
+1 & 2
+\end{array}\right] $, $ \mathbf{h}' = \left[\begin{array}{cccc}
+1
+\end{array}\right] $, $ \mathbf{b}'' = \left[\begin{array}{cccc}
+2
+\end{array}\right] $
+
+Сокращаем $ \mathbf{b}'' $ по модулю диагональных элементов из $ \mathbf{H}' $, вычисляя и добавляя соответствующий вектор из $ \mathcal{L}(\mathbf{H}') $: $ \mathbf{b}'' = \left[ \begin{array}{cccc}
+2
+\end{array}\right] $.
+
+Рекурсивно вызываем AddColumn со входом $ \mathbf{H}' $ и $ \mathbf{b}'' $, получаем матрицу $ \mathbf{H}'' = \left[\begin{array}{cccc}
+2
+\end{array}\right] $:
+\begin{itemize}
+\item $ \mathbf{H} = \left[\begin{array}{cccc}
+4
+\end{array}\right] $, $ \mathrm{a} = 4 $, $ \mathbf{h} = \left[\begin{array}{cccc}
+\end{array}\right] $, $ \mathbf{H}' = \left[ \begin{array}{cccc}
+\end{array}\right] $, $ \mathbf{b} = \left[\begin{array}{cccc}
+2
+\end{array}\right] $, $ \mathrm{b} = 2 $, $ \mathbf{b}' = \left[ \begin{array}{cccc}
+\end{array}\right] $
+
+Находим $ \mathrm{g} = 2 $, $ \mathrm{x} = 0 $, $ \mathrm{y} = 1 $. Составляем матрицу $  \mathbf{U} = \left[\begin{array}{cccc}
+0 & -1 \\
+1 & 2
+\end{array}\right] $, умножаем: $ \left[ \begin{array}{cccc}
+\mathrm{a} & \mathrm{b} \\
+\mathbf{h} & \mathbf{b}' \end{array} \right] \mathbf{U}=
+\left[ \begin{array}{cccc}
+\mathrm{g} & \mathrm{0} \\
+\mathbf{h}' & \mathbf{b}'' \end{array} \right] = \left[\begin{array}{cccc}
+2 & 0
+\end{array}\right] $, $ \mathbf{h}' = \left[\begin{array}{cccc}
+\end{array}\right] $, $ \mathbf{b}'' = \left[\begin{array}{cccc}
+\end{array}\right] $
+
+Сокращаем $ \mathbf{b}'' $ по модулю диагональных элементов из $ \mathbf{H}' $, вычисляя и добавляя соответствующий вектор из $ \mathcal{L}(\mathbf{H}') $: $ \mathbf{b}'' = \left[ \begin{array}{cccc}
+\end{array}\right] $.
+
+Рекурсивно вызываем AddColumn со входом $ \mathbf{H}' $ и $ \mathbf{b}'' $: произойдет выход из рекурсии по условию и вернется пустая матрица $ \mathbf{H}'' $.
+
+Сокращаем $ \mathbf{h}' $ по модулю диагональных элементов из $ \mathbf{H}'' $, вычисляя и добавляя соответствующий вектор из $ \mathcal{L}(\mathbf{H}'') $: $ \mathbf{h}' = \left[ \begin{array}{cccc}
+\end{array}\right] $.
+
+Возвращаем $ \left[\begin{array}{cccc}
+\mathrm{g} & \mathbf{0}^\mathbf{T} \\
+\mathbf{h}' & \mathbf{H}''
+\end{array}\right] = \left[\begin{array}{cccc}
+2
+\end{array}\right] $
+\end{itemize}
+
+Сокращаем $ \mathbf{h}' $ по модулю диагональных элементов из $ \mathbf{H}'' $, вычисляя и добавляя соответствующий вектор из $ \mathcal{L}(\mathbf{H}'') $: $ \mathbf{h}' = \left[ \begin{array}{cccc}
+2
+\end{array}\right] $.
+
+Возвращаем $ \left[\begin{array}{cccc}
+\mathrm{g} & \mathbf{0}^\mathbf{T} \\
+\mathbf{h}' & \mathbf{H}''
+\end{array}\right] = \left[\begin{array}{cccc}
+2 & 0 \\
+1 & 2
+\end{array}\right] $
+
+\item $ \mathbf{H} = \left[\begin{array}{cccc}
+2 & 0 \\
+1 & 2
+\end{array}\right] $, $ \mathrm{a} = 2 $, $ \mathbf{h} = \left[\begin{array}{cccc}
+1 
+\end{array}\right] $, $ \mathbf{H}' = \left[ \begin{array}{cccc}
+2
+\end{array}\right] $, $ \mathbf{b} = \left[\begin{array}{cccc}
+4 \\
+4
+\end{array}\right] $, $ \mathrm{b} = 4 $, $ \mathbf{b}' = \left[ \begin{array}{cccc}
+4
+\end{array}\right] $
+
+Находим $ \mathrm{g} = 2 $, $ \mathrm{x} = 0 $, $ \mathrm{y} = 1 $. Составляем матрицу $  \mathbf{U} = \left[\begin{array}{cccc}
+1 & -2 \\
+0 & 1
+\end{array}\right] $, умножаем: $ \left[ \begin{array}{cccc}
+\mathrm{a} & \mathrm{b} \\
+\mathbf{h} & \mathbf{b}' \end{array} \right] \mathbf{U}=
+\left[ \begin{array}{cccc}
+\mathrm{g} & \mathrm{0} \\
+\mathbf{h}' & \mathbf{b}'' \end{array} \right] = \left[\begin{array}{cccc}
+2 & 0 \\
+1 & 2
+\end{array}\right] $, $ \mathbf{h}' = \left[\begin{array}{cccc}
+1
+\end{array}\right] $, $ \mathbf{b}'' = \left[\begin{array}{cccc}
+2
+\end{array}\right] $
+
+Сокращаем $ \mathbf{b}'' $ по модулю диагональных элементов из $ \mathbf{H}' $, вычисляя и добавляя соответствующий вектор из $ \mathcal{L}(\mathbf{H}') $: $ \mathbf{b}'' = \left[ \begin{array}{cccc}
+0
+\end{array}\right] $.
+
+Рекурсивно вызываем AddColumn со входом $ \mathbf{H}' $ и $ \mathbf{b}'' $, получаем матрицу $ \mathbf{H}'' = \left[\begin{array}{cccc}
+2
+\end{array}\right] $:
+\begin{itemize}
+\item $ \mathbf{H} = \left[\begin{array}{cccc}
+2
+\end{array}\right] $, $ \mathrm{a} = 2 $, $ \mathbf{h} = \left[\begin{array}{cccc}
+\end{array}\right] $, $ \mathbf{H}' = \left[ \begin{array}{cccc}
+\end{array}\right] $, $ \mathbf{b} = \left[\begin{array}{cccc}
+0
+\end{array}\right] $, $ \mathrm{b} = 0 $, $ \mathbf{b}' = \left[ \begin{array}{cccc}
+\end{array}\right] $
+
+Находим $ \mathrm{g} = 2 $, $ \mathrm{x} = 1 $, $ \mathrm{y} = 0 $. Составляем матрицу $  \mathbf{U} = \left[\begin{array}{cccc}
+1 & 0 \\
+0 & 1
+\end{array}\right] $, умножаем: $ \left[ \begin{array}{cccc}
+\mathrm{a} & \mathrm{b} \\
+\mathbf{h} & \mathbf{b}' \end{array} \right] \mathbf{U}=
+\left[ \begin{array}{cccc}
+\mathrm{g} & \mathrm{0} \\
+\mathbf{h}' & \mathbf{b}'' \end{array} \right] = \left[\begin{array}{cccc}
+2 & 0
+\end{array}\right] $, $ \mathbf{h}' = \left[\begin{array}{cccc}
+\end{array}\right] $, $ \mathbf{b}'' = \left[\begin{array}{cccc}
+\end{array}\right] $
+
+Сокращаем $ \mathbf{b}'' $ по модулю диагональных элементов из $ \mathbf{H}' $, вычисляя и добавляя соответствующий вектор из $ \mathcal{L}(\mathbf{H}') $: $ \mathbf{b}'' = \left[ \begin{array}{cccc}
+\end{array}\right] $.
+
+Рекурсивно вызываем AddColumn со входом $ \mathbf{H}' $ и $ \mathbf{b}'' $: произойдет выход из рекурсии по условию и вернется пустая матрица $ \mathbf{H}'' $.
+
+Сокращаем $ \mathbf{h}' $ по модулю диагональных элементов из $ \mathbf{H}'' $, вычисляя и добавляя соответствующий вектор из $ \mathcal{L}(\mathbf{H}'') $: $ \mathbf{h}' = \left[ \begin{array}{cccc}
+\end{array}\right] $.
+
+Возвращаем $ \left[\begin{array}{cccc}
+\mathrm{g} & \mathbf{0}^\mathbf{T} \\
+\mathbf{h}' & \mathbf{H}''
+\end{array}\right] = \left[\begin{array}{cccc}
+2
+\end{array}\right] $
+\end{itemize}
+
+Сокращаем $ \mathbf{h}' $ по модулю диагональных элементов из $ \mathbf{H}'' $, вычисляя и добавляя соответствующий вектор из $ \mathcal{L}(\mathbf{H}'') $: $ \mathbf{h}' = \left[ \begin{array}{cccc}
+2
+\end{array}\right] $.
+
+Возвращаем $ \left[\begin{array}{cccc}
+\mathrm{g} & \mathbf{0}^\mathbf{T} \\
+\mathbf{h}' & \mathbf{H}''
+\end{array}\right] = \left[\begin{array}{cccc}
+2 & 0 \\
+1 & 2
+\end{array}\right] $
+\end{enumerate}
+
+ЭНФ($ \mathbf{B} $) = $ \left[\begin{array}{cccc}
+2 & 0 \\
+1 & 2
+\end{array}\right] $
+
+\subsection{Определение проблемы ближайшего вектора}
+
+Рассмотрим проблему ближайшего вектора: дан базис решетки $ \mathbf{B} \in \mathbb{R}^{d \times n} $ и вектор $ \mathbf{t} \in \mathbb{R}^d $, найти точку решетки $ \mathbf{Bx} $ $ (\mathbf{x} \in \mathbb{Z}^n) $ такую, что $ ||\mathbf{t - Bx}|| $ (расстояние от точки до решетки) минимально. Это задача оптимизации (минимизации) с допустимыми решениями, заданными всеми целочисленными векторами $ \mathbf{x} \in \mathbb{Z}^n $, и целевой функцией $ f(\mathbf{x}) = ||\mathbf{t - Bx}|| $.
+
+Пусть $ \mathbf{B} = [\mathbf{B}', \mathrm{b}] $ и $ \mathbf{x} = (\mathbf{x}', x) $, где $ \mathbf{B}' \in \mathbb{R}^{d \times \left( n \mathrm{-} 1 \right)} $, $ \mathbf{b} \in \mathbb{R}^d $, $ \mathbf{x}' \in \mathbb{Z}^{n-1} $ и $ x \in \mathbb{Z} $.
+Заметим, что если зафиксировать значение $ x $, то задача $ \text{ПБВ}(\mathbf{B, t}) $ потребует найти значение $ \mathbf{x}' \in \mathbb{Z}^{n - 1} $ такое, что 
+$$ ||\mathbf{t} - (\mathbf{B}'\mathbf{x}' + \mathbf{b}x)|| = ||(\mathbf{t} - \mathbf{b}x)-\mathbf{B}'\mathbf{x}'|| $$ 
+минимально. Это также ПБВ $ (\mathbf{B}', \mathbf{t}') $ с измененным вектором $ \mathbf{t}' = \mathbf{t} - \mathbf{b}x$ , и решеткой меньшего размера $ \mathcal{L}(\mathbf{B}') $. В частности, пространство решений сейчас состоит из $ (n – 1) $ целочисленных переменных $ \mathbf{x}' $. Это говорит о том, что можно решить ПБВ путем установки значения $ \mathbf{x} $ по одной координате за раз.
+Есть несколько способов превратить этот подход к уменьшению размерности в алгоритм, используя некоторые стандартные методы алгоритмического программирования. Простейшие методы:
+
+\begin{enumerate}
+\item Жадный метод, который выдает приближенные значения, но работает за полиномиальное время
+\item Метод ветвей и границ, который выдает точное решение за суперэкспоненциальное время.
+\end{enumerate}
+
+Оба метода основаны на очень простой нижней оценке целевой функции:
+$$ \min \limits_{x}f(\mathbf{x}) = dist\left(\mathbf{t}, \mathcal{L}\left(\mathbf{B}\right)\right)\geq dist \left(\mathbf{t}, span\left(\mathbf{B}\right)\right) = ||\mathbf{t} \perp \mathbf{B} || $$
+
+\subsection{Жадный метод: алгоритм ближайшей плоскости Бабая}
+
+Суть жадного метода состоит в выборе переменных, определяющих пространство решений, по одной, каждый раз выбирая значение, которые выглядит наиболее многообещающим. В нашем случае, выберем значение x, которое дает наименьшее возможное значение для нижней границы $ ||\mathbf{t}' \perp \mathbf{B}' || $. Напомним, что $ \mathbf{B}=\left[\mathbf{B}', \mathbf{b}\right] $ и $ \mathbf{x}=\left(\mathbf{x}' ,x\right) $, и что для любого фиксированного значения $ x $, ПБВ $ (\mathbf{B}, \mathbf{t}) $ сводится к ПБВ $ (\mathbf{B}',\mathbf{t}') $, где $ \mathbf{t}'=\mathbf{t}-\mathbf{b}x $. Используя $ ||\mathbf{t}' \perp \mathbf{B}' || $ для нижней границы, мы хотим выбрать значение $ x $ такое, что 
+$$ || \mathbf{t}' \perp \mathbf{B}' || = || \mathbf{t} - \mathbf{b}x \perp \mathbf{B}' || = || (\mathbf{t} \perp \mathbf{B}') - (\mathbf{b} \perp \mathbf{B}')x || $$ 
+как можно меньше. Это очень простая 1-размерная ПБВ проблема (с решеткой $ \mathcal{L}\left(\mathbf{b} \perp \mathbf{B}'\right) $ и целью $ \mathbf{t} \perp \mathbf{B}') $, которая может быть сразу решена установкой
+$$ x = \left\lfloor \left\langle \mathbf{t},\mathbf{b}^* \right\rangle \over ||\mathbf{b}^*||^2 \right\rceil $$
+где $ \mathbf{b}^* = \mathbf{b} \perp \mathbf{B}' $ компонента вектора $ \mathbf{b} $, ортогональная другим базисным векторам. Полный алгоритм приведен ниже: \newline
+
+\begin{algorithmic}
+\Require{$ \left[\mathbf{B}, \mathbf{b}\right], \mathbf{t} $} 
+\Ensure{$ \begin{cases}
+\mathbf{0} &\mathbf{Input} = [\ ], \mathbf{t} \\
+c \cdot \mathbf{b} + Greedy(\mathbf{B}, \mathbf{t} - c \cdot \mathbf{b}) &\mathbf{Input} = [\mathbf{B}, \mathbf{b}], \mathbf{t}
+\end{cases} $}
+
+\State {$ \mathbf{b}^* \gets \mathbf{b} \perp \mathbf{B} $}
+\State {$ x \gets \left\langle \mathbf{t}, \mathbf{b}^* \right\rangle / \left\langle \mathbf{b}^*,\mathbf{b}^* \right\rangle $}
+\State {$ c \gets \left\lfloor x \right\rceil $}
+\end{algorithmic}
+
+Количество рекурсивных вызовов будет равно размеру столбцов ($ n $) входной матрицы, т.к. мы ищем $ x $ для каждого столбца.
+
+\subsection{Нерекурсивная реализация}
+
+Легко заметить, что можно заменить рекурсию на цикл и таким образом получить нерекурсивную версию алгоритма:
+
+\begin{algorithmic}
+\Require{$ \mathbf{B}, \mathbf{t} $} 
+\Ensure{$ \mathbf{result} $}
+
+\State {$ \mathbf{GS} \gets {GramSchmidt(\mathbf{B})} $}
+\State {$ n \gets {\mathbf{B}.columns} $}
+\State {$ result \gets \mathbf{0} $}
+\For {$ i \gets 0 $ to $ n $}
+\State {$ index \gets n - i - 1 $}
+\State {$ \mathbf{b} \gets \mathbf{B}.column(index) $}
+\State {$ \mathbf{b}^* \gets \mathbf{GS}.column(index) $}
+\State {$ x \gets \left\langle \mathbf{t},\mathbf{b}^* \right\rangle / \left\langle \mathbf{b}^*,\mathbf{b}^* \right\rangle $}
+\State {$ c \gets \left\lfloor x \right\rceil $}
+\State {$ \mathbf{t} \gets \mathbf{t} - c \cdot \mathbf{b} $}
+\State {$ \mathbf{result} \gets \mathbf{result} + c \cdot \mathbf{b} $}
+\EndFor
+\end{algorithmic}
+
+\subsection{Пример жадного метода}
+
+Рассмотрим пример на простой решетке $ \mathbf{B} = \left[\begin{array}{cccc}
+1 & 0 \\
+0 & 1
+\end{array}\right] $ и целевым вектором $ \mathbf{t} = \left[\begin{array}{cccc}
+1.6 \\
+1.6
+\end{array}\right] $.
+
+Представим входную матрицу в виде $ \left[\mathbf{B}, \mathbf{b}\right] $. На каждом шаге нам необходимо вычислять вектор $ \mathbf{b}^* = \mathbf{b} \perp \mathbf{B} $. Эти вектора можно заранее вычислить через алгоритм Грама-Шмидта. В нашем случае вектора уже перпендикулярны друг другу. Смысл алгоритма заключается в установлении одной координаты за раз, для этого мы берем крайний вектор базиса, находим коэффициент, на который его надо умножить, и скадываем с результатом рекурсии текущего алгоритма со входом уменьшенной матрицы и отредактированной целью. Таким образом мы найдем коэффициенты для каждого вектора базиса, и ответ будет суммой умножения коэффициентов на соответствующий вектор базиса:
+
+\begin{enumerate}
+
+\item 
+$ \left[\mathbf{B}, \mathbf{b}\right] = \left[\begin{array}{cccc}
+1 & 0\\
+0 & 1
+\end{array}\right] $, $ \mathbf{t} = \left[\begin{array}{cccc}
+1.6 \\
+1.6
+\end{array}\right] $, $ \mathbf{b}^* = \left[\begin{array}{cccc}
+0 \\
+1
+\end{array}\right] $, $ x = 1.6 $, $ c = 2 $, $ c \cdot \mathbf{b} = \left[\begin{array}{cccc}
+0 \\
+2
+\end{array}\right] $.
+
+Рекурсивно вызываем метод, на вход отправляем $ \left[\mathbf{B}, \mathbf{b}\right] = \left[\begin{array}{cccc}
+1 \\
+0
+\end{array}\right] $, $ \mathbf{t} = \mathbf{t} - c \cdot \mathbf{b} = \left[\begin{array}{cccc}
+0 \\
+-0.4
+\end{array}\right] $
+
+\item 
+$ \left[\mathbf{B}, \mathbf{b}\right] = \left[\begin{array}{cccc}
+1 \\
+0
+\end{array}\right] $, $ \mathbf{t} = \left[\begin{array}{cccc}
+0 \\
+-0.4
+\end{array}\right] $, $ \mathbf{b}^* = \left[\begin{array}{cccc}
+1 \\
+0
+\end{array}\right] $, $ x = 1.6 $, $ c = 2 $, $ c \cdot \mathbf{b} = \left[\begin{array}{cccc}
+2 \\
+0
+\end{array}\right] $.
+
+Рекурсивно вызываем метод, на вход отправляем $ \left[\mathbf{B}, \mathbf{b}\right] = \left[\begin{array}{cccc}
+
+\end{array}\right] $, $ \mathbf{t} = \mathbf{t} - c \cdot \mathbf{b} = \left[\begin{array}{cccc}
+-2 \\
+-0.4
+\end{array}\right] $
+
+\item 
+Т.к. $ \left[\mathbf{B}, \mathbf{b}\right] = \left[ \right] $, то возвращаем пустой вектор.
+
+В итоге сумма векторов будет равна $ \left[\begin{array}{cccc}
+2 \\
+2
+\end{array}\right] $ -- искомый вектор.
+
+\end{enumerate}
+
+\subsection{Метод ветвей и границ}
+
+Алгоритм похож на жадный метод, но вместо установки $ x_n $ на наиболее подходящее значение (то есть на то, для которого нижняя граница расстояния $ \mathbf{t}' \perp \mathbf{B}' $ минимальна), мы ограничиваем множество всех возможных значений для $ x $ , и затем мы переходим на каждую из них для решения каждой соответствующей подзадачи независимо. В заключении, мы выбираем наилучшее возможное решение среди возвращенных всеми ветками.
+
+Чтобы ограничить значения, которые может принимать $ x $, нам также нужна верхняя граница расстояния от цели до решетки. Ее можно получить несколькими способами. Например, можно просто использовать $ ||\mathbf{t} || $ (расстояние от цели до начала координат) в качестве верхней границы. Но лучше использовать жадный алгоритм, чтобы найти приближенное решение $ \mathbf{v} = \text{Greedy}(\mathbf{B}, \mathbf{t}) $, и использовать $ || \mathbf{t} - \mathbf{v} || $ в качестве верхней границы. Как только верхняя граница $ u $  установлена, можно ограничить переменную $ x $ такими значениями, что $ (\mathbf{t} - x\mathbf{b}) \perp \mathbf{B}' || \leq u $.
+
+Количество рекурсивных вызовов будет не больше, чем число $ T = \prod_i\left\lceil \sqrt{\sum_{i \leq j}(||\mathbf{b}^*_i||/||\mathbf{b}^*_j||)^2}  \right\rceil = m! $. В процессе временного тестирования алгоритма будет видно, что чем больше число строк $ m $, тем резче возрастает время выполнения алгоритма.
+
+Окончательный алгоритм похож на жадный метод:
+
+\begin{algorithmic}
+\Require{$ \left[\mathbf{B}, \mathbf{b}\right], \mathbf{t} $} 
+\Ensure{$ \begin{cases}
+\mathbf{0} &\mathbf{Input} = [\ ], \mathbf{t} \\
+closest(V, \mathbf{t}) &\mathbf{Input} = [\mathbf{B}, \mathbf{b}], \mathbf{t}
+\end{cases} $}
+
+\State {$ \mathbf{b}^* \gets \mathbf{b} \perp \mathbf{B} $}
+\State {$ \mathbf{v} \gets Greedy([\mathbf{B}, \mathbf{b}], \mathbf{t}) $}
+\State {$ X \gets \left\lbrace x: || (\mathbf{t} - x\mathbf{b}) \perp \mathbf{B} || \leq || \mathbf{t} - \mathbf{v} || \right\rbrace $ }
+\State {$ V \gets \left\lbrace x \cdot \mathbf{b} + \text{Branch\&Bound}(\mathbf{B},\mathbf{t} - x \cdot \mathbf{b}):x \in X \right\rbrace $}
+\end{algorithmic}
+
+где $ \text{closest}(V, \mathbf{t}) $ выбирает вектор в $ V \subset \mathcal{L}(\mathbf{B}) $ ближайший к цели $ \mathbf{t} $.  
+
+Как и для жадного алгоритма, производительность (в данном случае время выполнения) метода Ветвей и Границ может быть очень низкой, если мы сперва не сократим базис входной решетки (например используя LLL-алгоритм).
+
+Сложность алгоритма заключается в нахождении множества $ X $. Его можно найти, используя выражение, выведенное в прошлом алгоритме: $ x = \frac{\left\langle \mathbf{t},\mathbf{b}^* \right\rangle}{||\mathbf{b}^*||^2} $. С помощью него мы найдем $ x $, который точно удовлетворяет множеству, а затем будем увеличивать/уменьшать до тех пор, пока выполняется условие $ || (\mathbf{t} - x\mathbf{b}) \perp \mathbf{B} || \leq || \mathbf{t} - \mathbf{v} || $.
+
+\subsection{Пример метода ветвей и границ}
+
+Рассмотрим пример на простой решетке $ \mathbf{B} = \left[\begin{array}{cccc}
+1 & 0 \\
+0 & 1
+\end{array}\right] $ и целевым вектором $ \mathbf{t} = \left[\begin{array}{cccc}
+1.6 \\
+1.6
+\end{array}\right] $.
+
+Представим входную матрицу в виде $ \left[\mathbf{B}, \mathbf{b}\right] $. На каждом шаге нам необходимо вычислять вектор $ \mathbf{b}^* = \mathbf{b} \perp \mathbf{B} $. Заранее вычислим их с помощью алгоритма Грама-Шмидта. В нашем случае вектора уже перпендикулярны друг другу. Смысл алгоритма также заключается в установлении одной координаты за раз, но вместо самого перспективного варианта мы будем строить множество $ X $, подходящее под условие $ |(\mathbf{t} - x\mathbf{b}) \perp \mathbf{B} | \leq | \mathbf{t} - \mathbf{v} | $. Вектор $ \mathbf{v} $ найдем с помощью жадного метода. Далее также, как и в жадном методе ищем необходимую сумму векторов, получим множество $ V $, из которого необходимо будет выбрать ближайший к цели $ \mathbf{t} $.
+
+$ \left[\mathbf{B}, \mathbf{b}\right] = \left[\begin{array}{cccc}
+1 & 0\\
+0 & 1
+\end{array}\right] $, $ \mathbf{t} = \left[\begin{array}{cccc}
+1.6 \\
+1.6
+\end{array}\right] $, $ \mathbf{b}^* = \left[\begin{array}{cccc}
+0 \\
+1
+\end{array}\right] $, $ \mathbf{v} = \left[\begin{array}{cccc}
+2 \\ 
+0
+\end{array}\right] $, $ X = \left\lbrace 2, 3, 1, 0 \right\rbrace $.
+
+Рекурсивно вызываем метод для каждого $ x \in X $, на вход отправляем $ \left[\mathbf{B}, \mathbf{b}\right] = \left[\begin{array}{cccc}
+1 \\
+0
+\end{array}\right] $, $ \mathbf{t} = \mathbf{t} - x \cdot \mathbf{b} $.
+
+Получаем множество $ V = \left\lbrace \left[\begin{array}{cccc}
+2 \\
+2
+\end{array}\right], \left[\begin{array}{cccc}
+2 \\
+3
+\end{array}\right], \left[\begin{array}{cccc}
+2 \\
+1
+\end{array}\right], \left[\begin{array}{cccc}
+2 \\
+0
+\end{array}\right] \right\rbrace$.
+
+Ближайший вектор будет равен $ \left[\begin{array}{cccc}
+2 \\
+2
+\end{array}\right] $ -- искомый вектор.
+
+\subsection{Параллельная реализация метода ветвей и границ}
+
+Можно увидеть, что процесс нахождения ближайшего вектора в методе ветвей и границ является деревом: для каждого подходящего значения $ x $ из множества $ X $ мы запускаем подзадачу, используя тот же алгоритм с решеткой меньшей размерности, и так до тех пор, пока у нас не закончатся векторы в базисе. При таком подходе сложно уйти от рекурсии, т.к. каждая подзадача использует свою версию целевого вектора, но каждую такую задачу можно решать независимо от другой, в чем и заключается пареллельный подход.
+
+Для получения параллельной реализации будем использовать задачи (task) из библиотеки OpenMP. После получения множества $ X $ будем находить множество векторов $ V $ следующим образом: для каждого значения $ x \in X $ будем создавать свою задачу, которая помещается в специальный пул, после чего свободные потоки берут из него задачи и выполняют работу параллельно. В качестве синхронизации используется директива \verb!#pragma omp taskwait!, она указывается перед вызовом \verb!closest(V, !\textbf{t}\verb!)!
 
 \clearpage
