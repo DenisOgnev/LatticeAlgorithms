@@ -25,11 +25,14 @@ namespace Algorithms
         Eigen::VectorXd greedy(const Eigen::MatrixXd &matrix, const Eigen::VectorXd &target);
         Eigen::VectorXd branch_and_bound(const Eigen::MatrixXd &matrix, const Eigen::VectorXd &target);
         
-        #ifdef PARALLEL_BB
+        #ifdef PARALLEL
         Eigen::VectorXd branch_and_bound_parallel(const Eigen::MatrixXd &matrix, const Eigen::VectorXd &target);
         #endif
     }
-    Eigen::MatrixXd gram_schmidt(const Eigen::MatrixXd &matrix, bool delete_zero_rows = true);
+    #ifdef PARALLEL
+    Eigen::MatrixXd gram_schmidt_parallel(const Eigen::MatrixXd &matrix, bool delete_zero_rows = true);
+    #endif
+    Eigen::MatrixXd gram_schmidt_sequential(const Eigen::MatrixXd &matrix, bool delete_zero_rows = true);
 }
 
 #endif

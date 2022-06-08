@@ -31,21 +31,8 @@ int main()
 	Eigen::MatrixXd mat = Utils::generate_random_matrix_with_full_column_rank(m, n, lowest, highest);
 	Eigen::VectorXd vec = Utils::generate_random_vector(m, lowest, highest);
 
-	Eigen::MatrixXd gs = Algorithms::gram_schmidt(mat, false);
+	Eigen::MatrixXd gs = Algorithms::gram_schmidt_parallel(mat, false);
 
-	int T = 1;
-	for (int i = 0; i < gs.cols(); i++)
-	{
-		int sum = 0;
-		for (int j = 0; j <= i; j++)
-		{
-			sum += gs.col(i).squaredNorm() / gs.col(i).squaredNorm();
-		}
-		std::cout << sum << "\n";
-		T *= sum;		
-	}
-	std::cout << T << "\n\n";
-	
 
 	// Eigen::MatrixXd mat(2, 2);
 	// Eigen::VectorXd vec(2);

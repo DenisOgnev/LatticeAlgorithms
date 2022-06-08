@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.2)
 project(LatticeAlgorithms)
 
-option(BUILD_DOCS "" OFF)
-option(BUILD_PARALLEL_BB "" OFF)
+option(BUILD_DOCS "" ON)
+option(BUILD_PARALLEL "" OFF)
 option(BUILD_GMP "" OFF)
 
 file(GLOB SRC
@@ -19,9 +19,9 @@ add_library(${PROJECT_NAME} ${SRC})
 
 target_include_directories(${PROJECT_NAME} PUBLIC include)
 
-if (BUILD_PARALLEL_BB)
-     target_compile_definitions(${PROJECT_NAME} PUBLIC PARALLEL_BB)
-endif(BUILD_PARALLEL_BB)
+if (BUILD_PARALLEL)
+     target_compile_definitions(${PROJECT_NAME} PUBLIC PARALLEL)
+endif(BUILD_PARALLEL)
 
 if (BUILD_GMP)
      target_compile_definitions(${PROJECT_NAME} PUBLIC GMP)

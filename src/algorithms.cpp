@@ -307,7 +307,11 @@ namespace Algorithms
         Eigen::VectorXd greedy_recursive(const Eigen::MatrixXd &matrix, const Eigen::VectorXd &target)
         {
             B_greedy = matrix;
-            gram_schmidt_greedy = Algorithms::gram_schmidt(matrix, false);
+            #ifdef PARALLEL
+            gram_schmidt_greedy = Algorithms::gram_schmidt_parallel(matrix, false);
+            #else
+            gram_schmidt_greedy = Algorithms::gram_schmidt_sequential(matrix, false);
+            #endif
             index_greedy = static_cast<int>(matrix.cols());
 
             return greedy_recursive_part(target);
@@ -320,7 +324,12 @@ namespace Algorithms
         // @param target vector for which lattice point is being searched for
         Eigen::VectorXd greedy(const Eigen::MatrixXd &matrix, const Eigen::VectorXd &target)
         {
-            Eigen::MatrixXd gram_schmidt = Algorithms::gram_schmidt(matrix, false);
+            Eigen::MatrixXd gram_schmidt;
+            #ifdef PARALLEL
+            gram_schmidt = Algorithms::gram_schmidt_parallel(matrix, false);
+            #else
+            gram_schmidt = Algorithms::gram_schmidt_sequential(matrix, false);
+            #endif
 
             Eigen::VectorXd result = Eigen::VectorXd::Zero(target.rows());
 
@@ -419,12 +428,16 @@ namespace Algorithms
         // @param target vector for which lattice point is being searched for
         Eigen::VectorXd branch_and_bound(const Eigen::MatrixXd &matrix, const Eigen::VectorXd &target)
         {
-            gram_schmidt_bb = Algorithms::gram_schmidt(matrix, false);
+            #ifdef PARALLEL
+            gram_schmidt_bb = Algorithms::gram_schmidt_parallel(matrix, false);
+            #else
+            gram_schmidt_bb = Algorithms::gram_schmidt_sequential(matrix, false);
+            #endif
 
             return branch_and_bound_recursive_part(matrix, target);
         }
 
-        #ifdef PARALLEL_BB
+        #ifdef PARALLEL
         // Recursive parallel body of branch and bound algorithm
         // @return Eigen::VectorXd
         // @param matrix input rational lattice basis that is linearly independent
@@ -510,20 +523,20 @@ namespace Algorithms
         // @param target vector for which lattice point is being searched for
         Eigen::VectorXd branch_and_bound_parallel(const Eigen::MatrixXd &matrix, const Eigen::VectorXd &target)
         {
-            gram_schmidt_bb_parallel = Algorithms::gram_schmidt(matrix, false);
+            gram_schmidt_bb_parallel = Algorithms::gram_schmidt_parallel(matrix, false);
 
             return branch_and_bound_recursive_part_parallel(matrix, target);
         }
         #endif
     }
 
-
+    #ifdef PARALLEL
     // Computes Gram Schmidt orthogonalization
     // @return Eigen::MatrixXd
     // @param matrix input matrix
     // @param normalize indicates whether to normalize output vectors
     // @param delete_zero_rows indicates whether to delete zero rows
-    Eigen::MatrixXd gram_schmidt(const Eigen::MatrixXd &matrix, bool delete_zero_rows)
+    Eigen::MatrixXd gram_schmidt_parallel(const Eigen::MatrixXd &matrix, bool delete_zero_rows)
     {
         std::vector<Eigen::VectorXd> basis;
 
@@ -539,6 +552,55 @@ namespace Algorithms
                 double inner2 = std::inner_product(basis_vector.data(), basis_vector.data() + basis_vector.size(), basis_vector.data(), 0.0);
 
                 #pragma omp critical
+                projections += (inner1 / inner2) * basis_vector;
+            }
+
+            Eigen::VectorXd result = vec - projections;
+
+            if (delete_zero_rows)
+            {
+                bool is_all_zero = result.isZero(1e-3);
+                if (!is_all_zero)
+                {
+                    basis.push_back(result);
+                }
+            }
+            else
+            {
+                basis.push_back(result);
+            }
+        }
+
+        Eigen::MatrixXd result(matrix.rows(), basis.size());
+
+        for (int i = 0; i < basis.size(); i++)
+        {
+            result.col(i) = basis[i];
+        }
+
+        return result;
+    }
+    #endif
+
+    // Computes Gram Schmidt orthogonalization
+    // @return Eigen::MatrixXd
+    // @param matrix input matrix
+    // @param normalize indicates whether to normalize output vectors
+    // @param delete_zero_rows indicates whether to delete zero rows
+    Eigen::MatrixXd gram_schmidt_sequential(const Eigen::MatrixXd &matrix, bool delete_zero_rows)
+    {
+        std::vector<Eigen::VectorXd> basis;
+
+        for (const auto &vec : matrix.colwise())
+        {
+            Eigen::VectorXd projections = Eigen::VectorXd::Zero(vec.size());
+
+            for (int i = 0; i < basis.size(); i++)
+            {
+                Eigen::MatrixXd basis_vector = basis[i];
+                double inner1 = std::inner_product(vec.data(), vec.data() + vec.size(), basis_vector.data(), 0.0);
+                double inner2 = std::inner_product(basis_vector.data(), basis_vector.data() + basis_vector.size(), basis_vector.data(), 0.0);
+
                 projections += (inner1 / inner2) * basis_vector;
             }
 

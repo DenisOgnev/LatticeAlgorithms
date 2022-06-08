@@ -17,7 +17,7 @@
 
 \item В папке cmake содержатся файлы для подключения сборок некоторых библиотек через CMake.
 
-\item CMakeLists.txt -- файл CMake, использующийся для сборки проекта.
+\item CMakeLists.txt --- файл CMake, использующийся для сборки проекта.
 
 \end{itemize}
 
@@ -25,19 +25,27 @@
 
 Программная реализация тестировалась с использованием компилятора G++ версии 6.3.0 в режиме сборки Release на ПК со следующими характеристиками: CPU: Intel(R) Core (TM) i5-9600KF CPU @ 3.70GHz, ОЗУ: DDR4, 16 ГБ (двухканальных режим 8х2), 2666 МГц. Тестирование проводилось на одинаковых данных.
 
+\subsection{Ортогонализация Грама-Шмидта}
+
+\begin{itemize}
+
+\item 123
+
+\end{itemize}
+
 \subsection{Нахождение ЭНФ}
 
-В ходе работы была получена реализация с использованием библиотеки Boost.Multiprecision. Реализация находится в пространстве имен \verb!Algorithms::HNF! и состоит из 4 функций:
+В ходе работы была получена реализация с использованием библиотеки Boost.Multiprecision. Реализация находится в пространстве имен Algorithms::HNF и состоит из 4 функций:
 
 \begin{enumerate}
 
-\item \verb!HNF_full_row_rank(matrix)! $\rightarrow$ \verb!result_HNF! -- принимает на вход матрицу с полным рангом строки и возвращает ее ЭНФ. Использует встроенную реализацию больших чисел Boost.Multiprecision.
+\item HNF\_full\_row\_rank(matrix) $\rightarrow$ result\_HNF --- принимает на вход матрицу с полным рангом строки и возвращает ее ЭНФ. Использует встроенную реализацию больших чисел Boost.Multiprecision.
 
-\item \verb!HNF(matrix)! $\rightarrow$ \verb!result_HNF! -- принимает на вход матрицу и возвращает ее ЭНФ. Использует встроенную реализацию больших чисел Boost.Multiprecision.
+\item HNF(matrix) $\rightarrow$ result\_HNF --- принимает на вход матрицу и возвращает ее ЭНФ. Использует встроенную реализацию больших чисел Boost.Multiprecision.
 
-\item \verb!HNF_full_row_rank_GMP(matrix)! $\rightarrow$ \verb!result_HNF! -- принимает на вход матрицу с полным рангом строки и возвращает ее ЭНФ. Использует реализацию больших чисел от GMP.
+\item HNF\_full\_row\_rank\_GMP(matrix) $\rightarrow$ result\_HNF --- принимает на вход матрицу с полным рангом строки и возвращает ее ЭНФ. Использует реализацию больших чисел от GMP.
 
-\item \verb!HNF_GMP(matrix)! $\rightarrow$ \verb!result_HNF! -- принимает на вход матрицу и возвращает ее ЭНФ. Использует реализацию больших чисел от GMP.
+\item HNF\_GMP(matrix) $\rightarrow$ result\_HNF --- принимает на вход матрицу и возвращает ее ЭНФ. Использует реализацию больших чисел от GMP.
 
 \end{enumerate}
 
@@ -99,7 +107,7 @@ $ \text{ЭНФ}(\mathbf{B}) = \left[\begin{array}{cccc}
 $ \text{ЭНФ}(\mathbf{B}') = \left[\begin{array}{cccc}
 1 & 0 \\
 0 & 1
-\end{array}\right] $ -- образуют одинаковую решетку.
+\end{array}\right] $ --- образуют одинаковую решетку.
 
 $ \mathbf{B} = \left[\begin{array}{cccc}
 1 & 0 \\
@@ -116,7 +124,7 @@ $ \text{ЭНФ}(\mathbf{B}) = \left[\begin{array}{cccc}
 $ \text{ЭНФ}(\mathbf{B}') = \left[\begin{array}{cccc}
 2 & 0 \\
 0 & 1
-\end{array}\right] $ -- не образуют одинаковой решетки.
+\end{array}\right] $ --- не образуют одинаковой решетки.
 
 \textbf{Объединение решеток.} Дано два базиса $ \mathbf{B} $ и $ \mathbf{B}' $. Необходимо найти базис для наименьшей решетки, содержащей обе решетки $ \mathcal{L}(\mathbf{B}) $ и $ \mathcal{L}(\mathbf{B}') $. Такая решетка будет сгенерирована от $ \left[\mathbf{B}|\mathbf{B}'\right] $, и можно легко найти ее базис через ЭНФ:
 
@@ -158,7 +166,7 @@ $ \text{ЭНФ}(\left[\mathbf{B} | \mathbf{B}' \right]) = \left[\begin{array}{cc
 $ \text{ЭНФ}(\mathbf{B}) = \left[\begin{array}{cccc}
 2 & 0 \\
 0 & 1
-\end{array}\right] $ -- $ \mathcal{L}(\mathbf{B}') $ не является подрешеткой $ \mathcal{L}(\mathbf{B}) $.
+\end{array}\right] $ --- $ \mathcal{L}(\mathbf{B}') $ не является подрешеткой $ \mathcal{L}(\mathbf{B}) $.
 
 $ \mathbf{B} = \left[\begin{array}{cccc}
 1 & 0 \\
@@ -179,7 +187,7 @@ $ \text{ЭНФ}(\left[\mathbf{B} | \mathbf{B}' \right]) = \left[\begin{array}{cc
 $ \text{ЭНФ}(\mathbf{B}) = \left[\begin{array}{cccc}
 1 & 0 \\
 0 & 1
-\end{array}\right] $ -- $ \mathcal{L}(\mathbf{B}') $ является подрешеткой $ \mathcal{L}(\mathbf{B}) $.
+\end{array}\right] $ --- $ \mathcal{L}(\mathbf{B}') $ является подрешеткой $ \mathcal{L}(\mathbf{B}) $.
 
 \textbf{Проблема содержания.} Дана решетка $ \mathbf{B} $ и вектор $ \mathbf{v} $, необходимо узнать, принадлежит ли вектор решетке ($ \mathbf{v} \subseteq \mathcal{L}(\mathbf{B}') $). Эта проблема сводится к проблеме включения путем проверки $ \mathcal{L}(\left[\mathbf{v}\right]) \subseteq \mathcal{L}(\mathbf{B}) $. Если необходимо проверить содержание нескольких векторов $ \mathbf{v}_1, \ldots, \mathbf{v}_n $, тогда следует сначала вычислить $ \mathbf{H} = \text{ЭНФ}(\mathbf{B}) $, и затем проверять, равно ли $ \mathbf{H} $ $ \text{ЭНФ}(\left[\mathbf{H} | \mathbf{v}_i \right]) $ для каждого вектора:
 
@@ -202,7 +210,7 @@ $ \text{ЭНФ}(\left[\mathbf{B} | \mathbf{v} \right]) = \left[\begin{array}{ccc
 $ \text{ЭНФ}(\mathbf{B}) = \left[\begin{array}{cccc}
 2 & 0 \\
 0 & 1
-\end{array}\right] $ -- вектор $ \mathbf{v} \subseteq \mathcal{L}(\mathbf{B}) $.
+\end{array}\right] $ --- вектор $ \mathbf{v} \subseteq \mathcal{L}(\mathbf{B}) $.
 
 
 $ \mathbf{B} = \left[\begin{array}{cccc}
@@ -224,21 +232,21 @@ $ \text{ЭНФ}(\left[\mathbf{B} | \mathbf{v} \right]) = \left[\begin{array}{ccc
 $ \text{ЭНФ}(\mathbf{B}) = \left[\begin{array}{cccc}
 2 & 0 \\
 0 & 1
-\end{array}\right] $ -- вектор $ \mathbf{v} \not \subseteq \mathcal{L}(\mathbf{B}) $.
+\end{array}\right] $ --- вектор $ \mathbf{v} \not \subseteq \mathcal{L}(\mathbf{B}) $.
 
 \subsection{Решение ПБВ}
 
-Реализация находится в пространстве имен \verb!Algorithms::CVP! и состоит из 4 функций:
+Реализация находится в пространстве имен Algorithms::CVP и состоит из 4 функций:
 
 \begin{enumerate}
 
-\item \verb!greedy_recursive(matrix, vector)! $ \rightarrow $ \verb!vector! -- рекурсивный Greedy алгоритм, принимает на вход базис решетки и целевой вектор, возвращает вектор решетки, примерно ближайший к целевому.
+\item greedy\_recursive(matrix, vector) $ \rightarrow $ vector --- рекурсивный Greedy алгоритм, принимает на вход базис решетки и целевой вектор, возвращает вектор решетки, примерно ближайший к целевому.
 
-\item \verb!greedy(matrix, vector)! $ \rightarrow $ \verb!vector! -- последовательный Greedy алгоритм, принимает на вход базис решетки и целевой вектор, возвращает вектор решетки, примерно ближайший к целевому.
+\item greedy(matrix, vector) $ \rightarrow $ vector --- последовательный Greedy алгоритм, принимает на вход базис решетки и целевой вектор, возвращает вектор решетки, примерно ближайший к целевому.
 
-\item \verb!branch_and_bound(matrix, vector)! $ \rightarrow $ \verb!vector! -- рекурсивный Branch and Bound алгоритм, принимает на вход базис решетки и целевой вектор, возвращает вектор решетки, ближайший к целевому.
+\item branch\_and\_bound(matrix, vector) $ \rightarrow $ vector --- рекурсивный Branch and Bound алгоритм, принимает на вход базис решетки и целевой вектор, возвращает вектор решетки, ближайший к целевому.
 
-\item \verb!greedy_recursive(matrix, vector)! $ \rightarrow $ \verb!vector! -- параллельный рекурсивный Branch and Bound алгоритм, принимает на вход базис решетки и целевой вектор, возвращает вектор решетки, ближайший к целевому.
+\item greedy\_recursive(matrix, vector) $ \rightarrow $ vector --- параллельный рекурсивный Branch and Bound алгоритм, принимает на вход базис решетки и целевой вектор, возвращает вектор решетки, ближайший к целевому.
 
 \end{enumerate}
 

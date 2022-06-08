@@ -166,7 +166,55 @@ namespace Utils
         return matrix.cast<mp::cpp_int>();
     }
 
+    #ifdef PARALLEL
+    // Returns matrix that consist of linearly independent columns of input matrix and othogonalized matrix
+    // @param matrix input matrix
+    // @return std::tuple<Eigen::Matrix<boost::multiprecision::cpp_int, -1, -1>, Eigen::Matrix<boost::multiprecision::cpp_rational, -1, -1>>
+    std::tuple<Eigen::Matrix<mp::cpp_int, -1, -1>, Eigen::Matrix<mp::cpp_rational, -1, -1>> get_linearly_independent_columns_by_gram_schmidt(const Eigen::Matrix<mp::cpp_int, -1, -1> &matrix)
+    {
+        std::vector<Eigen::Vector<mp::cpp_rational, -1>> basis;
+        std::vector<int> indexes;
 
+        int counter = 0;
+        for (const Eigen::Vector<mp::cpp_rational, -1> &vec : matrix.cast<mp::cpp_rational>().colwise())
+        {
+            Eigen::Vector<mp::cpp_rational, -1> projections = Eigen::Vector<mp::cpp_rational, -1>::Zero(vec.size());
+
+            #pragma omp parallel for
+            for (int i = 0; i < basis.size(); i++)
+            {
+                Eigen::Vector<mp::cpp_rational, -1> basis_vector = basis[i];
+                mp::cpp_rational inner1 = std::inner_product(vec.data(), vec.data() + vec.size(), basis_vector.data(), mp::cpp_rational(0.0));
+                mp::cpp_rational inner2 = std::inner_product(basis_vector.data(), basis_vector.data() + basis_vector.size(), basis_vector.data(), mp::cpp_rational(0.0));
+                    
+                mp::cpp_rational coef = inner1 / inner2;
+
+                #pragma omp critical
+                projections += basis_vector * coef;
+            }
+
+            Eigen::Vector<mp::cpp_rational, -1> result = vec - projections;
+
+            bool is_all_zero = result.isZero(1e-3);
+            if (!is_all_zero)
+            {
+                basis.push_back(result);
+                indexes.push_back(counter);
+            }
+            counter++;
+        }
+
+        Eigen::Matrix<mp::cpp_int, -1, -1> result(matrix.rows(), indexes.size());
+        Eigen::Matrix<mp::cpp_rational, -1, -1> gram_schmidt(matrix.rows(), basis.size());
+        
+        for (int i = 0; i < indexes.size(); i++)
+        {
+            result.col(i) = matrix.col(indexes[i]);
+            gram_schmidt.col(i) = basis[i];
+        }
+        return std::make_tuple(result, gram_schmidt);
+    }
+    #else
     // Returns matrix that consist of linearly independent columns of input matrix and othogonalized matrix
     // @param matrix input matrix
     // @return std::tuple<Eigen::Matrix<boost::multiprecision::cpp_int, -1, -1>, Eigen::Matrix<boost::multiprecision::cpp_rational, -1, -1>>
@@ -212,8 +260,67 @@ namespace Utils
         }
         return std::make_tuple(result, gram_schmidt);
     }
+    #endif
 
-    
+    #ifdef PARALLEL
+    // Returns matrix that consist of linearly independent rows of input matrix, indicies of that rows in input matrix, indices of deleted rows and martix T, that consists of Gram Schmidt coefficients
+    // @param matrix input matrix
+    // @return std::tuple<Eigen::Matrix<boost::multiprecision::cpp_int, -1, -1>, std::vector<int>, std::vector<int>, Eigen::Matrix<boost::multiprecision::cpp_int, -1, -1>>
+    std::tuple<Eigen::Matrix<mp::cpp_int, -1, -1>, std::vector<int>, std::vector<int>, Eigen::Matrix<mp::cpp_rational, -1, -1>> get_linearly_independent_rows_by_gram_schmidt(const Eigen::Matrix<mp::cpp_int, -1, -1> &matrix)
+    {
+        std::vector<Eigen::Vector<mp::cpp_rational, -1>> basis;
+        std::vector<int> indicies;
+	    std::vector<int> deleted_indicies;
+        Eigen::Matrix<mp::cpp_rational, -1, -1> T = Eigen::Matrix<mp::cpp_rational, -1, -1>::Identity(matrix.rows(), matrix.rows());
+
+        int counter = 0;
+        for (const Eigen::Vector<mp::cpp_rational, -1> &vec : matrix.cast<mp::cpp_rational>().rowwise())
+        {
+            Eigen::Vector<mp::cpp_rational, -1> projections = Eigen::Vector<mp::cpp_rational, -1>::Zero(vec.size());
+
+            #pragma omp parallel
+            for (int i = 0; i < basis.size(); i++)
+            {
+                Eigen::Vector<mp::cpp_rational, -1> basis_vector = basis[i];
+                mp::cpp_rational inner1 = std::inner_product(vec.data(), vec.data() + vec.size(), basis_vector.data(), mp::cpp_rational(0.0));
+                mp::cpp_rational inner2 = std::inner_product(basis_vector.data(), basis_vector.data() + basis_vector.size(), basis_vector.data(), mp::cpp_rational(0.0));
+        
+                mp::cpp_rational u_ij = 0;
+                if (!inner1.is_zero())
+                {
+                    u_ij = inner1 / inner2;
+
+                    #pragma omp critical
+                    {
+                        projections += u_ij * basis_vector;
+                        T(counter, i) = u_ij;
+                    }
+                }
+            }
+
+            Eigen::Vector<mp::cpp_rational, -1> result = vec - projections;
+
+            bool is_all_zero = result.isZero(1e-3);
+            if (!is_all_zero)
+            {
+                indicies.push_back(counter);
+            }
+            else
+            {
+                deleted_indicies.push_back(counter);
+            }
+            basis.push_back(result);
+            counter++;
+        }
+
+        Eigen::Matrix<mp::cpp_int, -1, -1> result(indicies.size(), matrix.cols());
+        for (int i = 0; i < indicies.size(); i++)
+        {
+            result.row(i) = matrix.row(indicies[i]);
+        }
+        return std::make_tuple(result, indicies, deleted_indicies, T);
+    }
+    #else 
     // Returns matrix that consist of linearly independent rows of input matrix, indicies of that rows in input matrix, indices of deleted rows and martix T, that consists of Gram Schmidt coefficients
     // @param matrix input matrix
     // @return std::tuple<Eigen::Matrix<boost::multiprecision::cpp_int, -1, -1>, std::vector<int>, std::vector<int>, Eigen::Matrix<boost::multiprecision::cpp_int, -1, -1>>
@@ -267,6 +374,7 @@ namespace Utils
         }
         return std::make_tuple(result, indicies, deleted_indicies, T);
     }
+    #endif
 
 
     // Extended GCD algorithm, returns tuple of g, x, y such that xa + yb = g
@@ -440,7 +548,7 @@ namespace Utils
         return matrix.cast<mp::mpz_int>();
     }
 
-
+    #ifdef PARALLEL
     // Returns matrix that consist of linearly independent columns of input matrix and othogonalized matrix
     // @param matrix input matrix
     // @return std::tuple<Eigen::Matrix<boost::multiprecision::mpz_int, -1, -1>, Eigen::Matrix<boost::multiprecision::mpq_rational, -1, -1>>
@@ -487,8 +595,54 @@ namespace Utils
         }
         return std::make_tuple(result, gram_schmidt);
     }
+    #else
+    // Returns matrix that consist of linearly independent columns of input matrix and othogonalized matrix
+    // @param matrix input matrix
+    // @return std::tuple<Eigen::Matrix<boost::multiprecision::mpz_int, -1, -1>, Eigen::Matrix<boost::multiprecision::mpq_rational, -1, -1>>
+    std::tuple<Eigen::Matrix<mp::mpz_int, -1, -1>, Eigen::Matrix<mp::mpq_rational, -1, -1>> get_linearly_independent_columns_by_gram_schmidt_GMP(const Eigen::Matrix<mp::mpz_int, -1, -1> &matrix)
+    {
+        std::vector<Eigen::Vector<mp::mpq_rational, -1>> basis;
+        std::vector<int> indexes;
 
+        int counter = 0;
+        for (const Eigen::Vector<mp::mpq_rational, -1> &vec : matrix.cast<mp::mpq_rational>().colwise())
+        {
+            Eigen::Vector<mp::mpq_rational, -1> projections = Eigen::Vector<mp::mpq_rational, -1>::Zero(vec.size());
 
+            for (int i = 0; i < basis.size(); i++)
+            {
+                Eigen::Vector<mp::mpq_rational, -1> basis_vector = basis[i];
+                mp::mpq_rational inner1 = std::inner_product(vec.data(), vec.data() + vec.size(), basis_vector.data(), mp::mpq_rational(0.0));
+                mp::mpq_rational inner2 = std::inner_product(basis_vector.data(), basis_vector.data() + basis_vector.size(), basis_vector.data(), mp::mpq_rational(0.0));
+                    
+                mp::mpq_rational coef = inner1 / inner2;   
+                projections += basis_vector * coef;
+            }
+
+            Eigen::Vector<mp::mpq_rational, -1> result = vec - projections;
+
+            bool is_all_zero = result.isZero(1e-3);
+            if (!is_all_zero)
+            {
+                basis.push_back(result);
+                indexes.push_back(counter);
+            }
+            counter++;
+        }
+
+        Eigen::Matrix<mp::mpz_int, -1, -1> result(matrix.rows(), indexes.size());
+        Eigen::Matrix<mp::mpq_rational, -1, -1> gram_schmidt(matrix.rows(), basis.size());
+        
+        for (int i = 0; i < indexes.size(); i++)
+        {
+            result.col(i) = matrix.col(indexes[i]);
+            gram_schmidt.col(i) = basis[i];
+        }
+        return std::make_tuple(result, gram_schmidt);
+    }
+    #endif
+
+    #ifdef PARALLEL
     // Returns matrix that consist of linearly independent rows of input matrix, indicies of that rows in input matrix, indices of deleted rows and martix T, that consists of Gram Schmidt coefficients
     // @param matrix input matrix
     // @return std::tuple<Eigen::Matrix<boost::multiprecision::mpz_int, -1, -1>, std::vector<int>, std::vector<int>, Eigen::Matrix<boost::multiprecision::mpz_int, -1, -1>>
@@ -545,6 +699,62 @@ namespace Utils
         }
         return std::make_tuple(result, indicies, deleted_indicies, T);
     }
+    #else
+    // Returns matrix that consist of linearly independent rows of input matrix, indicies of that rows in input matrix, indices of deleted rows and martix T, that consists of Gram Schmidt coefficients
+    // @param matrix input matrix
+    // @return std::tuple<Eigen::Matrix<boost::multiprecision::mpz_int, -1, -1>, std::vector<int>, std::vector<int>, Eigen::Matrix<boost::multiprecision::mpz_int, -1, -1>>
+    std::tuple<Eigen::Matrix<mp::mpz_int, -1, -1>, std::vector<int>, std::vector<int>, Eigen::Matrix<mp::mpq_rational, -1, -1>> get_linearly_independent_rows_by_gram_schmidt_GMP(const Eigen::Matrix<mp::mpz_int, -1, -1> &matrix)
+    {
+        std::vector<Eigen::Vector<mp::mpq_rational, -1>> basis;
+        std::vector<int> indicies;
+	    std::vector<int> deleted_indicies;
+        Eigen::Matrix<mp::mpq_rational, -1, -1> T = Eigen::Matrix<mp::mpq_rational, -1, -1>::Identity(matrix.rows(), matrix.rows());
+
+        int counter = 0;
+        for (const Eigen::Vector<mp::mpq_rational, -1> &vec : matrix.cast<mp::mpq_rational>().rowwise())
+        {
+            Eigen::Vector<mp::mpq_rational, -1> projections = Eigen::Vector<mp::mpq_rational, -1>::Zero(vec.size());
+
+            for (int i = 0; i < basis.size(); i++)
+            {
+                Eigen::Vector<mp::mpq_rational, -1> basis_vector = basis[i];
+                mp::mpq_rational inner1 = std::inner_product(vec.data(), vec.data() + vec.size(), basis_vector.data(), mp::mpq_rational(0.0));
+                mp::mpq_rational inner2 = std::inner_product(basis_vector.data(), basis_vector.data() + basis_vector.size(), basis_vector.data(), mp::mpq_rational(0.0));
+        
+                mp::mpq_rational u_ij = 0;
+                if (!inner1.is_zero())
+                {
+                    u_ij = inner1 / inner2;
+                    {
+                        projections += u_ij * basis_vector;
+                        T(counter, i) = u_ij;
+                    }
+                }
+            }
+
+            Eigen::Vector<mp::mpq_rational, -1> result = vec - projections;
+
+            bool is_all_zero = result.isZero(1e-3);
+            if (!is_all_zero)
+            {
+                indicies.push_back(counter);
+            }
+            else
+            {
+                deleted_indicies.push_back(counter);
+            }
+            basis.push_back(result);
+            counter++;
+        }
+
+        Eigen::Matrix<mp::mpz_int, -1, -1> result(indicies.size(), matrix.cols());
+        for (int i = 0; i < indicies.size(); i++)
+        {
+            result.row(i) = matrix.row(indicies[i]);
+        }
+        return std::make_tuple(result, indicies, deleted_indicies, T);
+    }
+    #endif
 
 
     // Extended GCD algorithm, returns tuple of g, x, y such that xa + yb = g
@@ -636,7 +846,7 @@ namespace Utils
         return vector;
     }
 
-
+    #ifdef PARALLEL
     // Computes component of a vector perpendicular to a matrix using equations from Gram Schmidt computing
     // @return Eigen::VectorXd
     // @param matrix input matrix
@@ -650,7 +860,7 @@ namespace Utils
         for (const Eigen::VectorXd &vec : t_matrix.colwise())
         {
             Eigen::VectorXd projections = Eigen::VectorXd::Zero(vec.size());
-
+            
             #pragma omp parallel for
             for (int i = 0; i < basis.size(); i++)
             {
@@ -672,6 +882,41 @@ namespace Utils
 
         return result;
     }
+    #else
+    // Computes component of a vector perpendicular to a matrix using equations from Gram Schmidt computing
+    // @return Eigen::VectorXd
+    // @param matrix input matrix
+    // @param vector input vector
+    Eigen::VectorXd projection(const Eigen::MatrixXd &matrix, const Eigen::VectorXd &vector)
+    {
+        Eigen::MatrixXd t_matrix(matrix.rows(), matrix.cols() + 1);
+        t_matrix << matrix, vector;
+        std::vector<Eigen::VectorXd> basis;
+
+        for (const Eigen::VectorXd &vec : t_matrix.colwise())
+        {
+            Eigen::VectorXd projections = Eigen::VectorXd::Zero(vec.size());
+            
+            for (int i = 0; i < basis.size(); i++)
+            {
+                Eigen::VectorXd basis_vector = basis[i];
+                double inner1 = std::inner_product(vec.data(), vec.data() + vec.size(), basis_vector.data(), 0.0);
+                double inner2 = std::inner_product(basis_vector.data(), basis_vector.data() + basis_vector.size(), basis_vector.data(), 0.0);
+                
+                double coef = inner1 / inner2;
+                projections += basis_vector * coef;
+            }
+
+            Eigen::VectorXd t_result = vec - projections;
+
+            basis.push_back(t_result);
+        }
+
+        Eigen::VectorXd result = basis[basis.size() - 1];
+
+        return result;
+    }
+    #endif
 
 
     // Finds vector that is closest to other vectors in matrix
