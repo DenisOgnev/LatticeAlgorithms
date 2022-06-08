@@ -8,7 +8,7 @@
 ```
 mkdir build
 cd build
-cmake -D BUILD_DOCS=OFF BUILD_PARALLEL=OFF BUILD_GMP=OFF .. -G "MinGW Makefiles"
+cmake -D BUILD_DOCS=OFF BUILD_PARALLEL=OFF BUILD_GMP=OFF ..
 cmake --build . --config RELEASE
 ```
 ## Flags
