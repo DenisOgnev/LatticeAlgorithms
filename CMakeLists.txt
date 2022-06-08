@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.2)
 project(LatticeAlgorithms)
 
-option(BUILD_DOCS "" ON)
+option(BUILD_DOCS "" OFF)
 option(BUILD_PARALLEL "" OFF)
 option(BUILD_GMP "" OFF)
 
