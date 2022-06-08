@@ -1,7 +1,7 @@
 project(Diploma)
 
 set(PDFLATEX_COMPILER xelatex)
-include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/UseLATEX.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/../cmake/UseLATEX.cmake)
 
 ADD_LATEX_DOCUMENT(main.tex 
     INPUTS 
