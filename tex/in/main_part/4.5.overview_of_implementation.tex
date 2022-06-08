@@ -2,12 +2,12 @@
 
 \section{Обзор программной реализации}
 
-В ходе выполнения выпускной квалификационной работы была получена реализация описанных алгоритмов на языке C++. Для хранения исходного кода используется система контроля версий Git и сервис Github, где был создан репозиторий. Программная реализация должна использоваться как подключаемая библиотека. Структура проекта следующая:
+В ходе выполнения выпускной квалификационной работы была получена реализация описанных алгоритмов на языке C++. Для хранения исходного кода используется система контроля версий Git и сервис Github, где был создан репозиторий\cite{Repository}. Программная реализация должна использоваться как подключаемая библиотека. Структура проекта следующая:
 \begin{itemize}
 
 \item В папке src содержатся файлы с исходным кодом в формате .cpp.
 
-\item В папке include содержатся подключаемые Header файлы .hpp.
+\item В папке include содержатся подключаемые header файлы .hpp.
 
 \item В папке tex содержатся исходные .tex файлы документа выпускной квалификационной работы.
 
@@ -25,17 +25,86 @@
 
 Программная реализация тестировалась с использованием компилятора G++ версии 6.3.0 в режиме сборки Release на ПК со следующими характеристиками: CPU: Intel(R) Core (TM) i5-9600KF CPU @ 3.70GHz, ОЗУ: DDR4, 16 ГБ (двухканальных режим 8х2), 2666 МГц. Тестирование проводилось на одинаковых данных.
 
+\subsection{Вспомогательные функции}
+
+Вспомогательные функции находятся в файле utils.cpp в пространстве имен Utils:
+
+add\_column(HNF, column) $ \rightarrow $ $ \left[\text{HNF} | \text{column}\right] $ --- функция, используемая при нахождении ЭНФ. Принимает ЭНФ и возвращает $ \left[\text{HNF} | \text{column}\right] $.
+
+reduce(vector, matrix) $ \rightarrow $ reduced\_vector --- функция для сокращения вектора относительно диагональных элементов входного базиса.
+
+generate\_random\_matrix\_with\_full\_row\_rank(m, n, lowest, highest) $ \rightarrow $ matrix --- возвращает произвольную матрицу заданного размера с полным рангом строки с числами в заданном диапазоне.
+
+generate\_random\_matrix(m, n, lowest, highest) $ \rightarrow $ matrix --- возвращает произвольную матрицу заданного размера с числами в заданном диапазоне.
+
+get\_linearly\_independent\_columns\_by\_gram\_schmidt(matrix) $ \rightarrow $ result\_matrix --- возвращает линейно независимые столбцы матрицы и ортогонализованный базис.
+
+get\_linearly\_independent\_rows\_by\_gram\_schmidt(matrix) $ \rightarrow $ result\_matrix --- возвращает линейно независимые строки матрицы, их индексы в исходной матрице, индексы удаленных строк и матрицу $ \mathbf{T} $.
+
+gcd\_extended(a, b) $ \rightarrow $ g, x, y --- расширенный НОД алгоритм, возвращает g, x, y такие, что $ \mathrm{g} = \mathrm{xa} + \mathrm{yb} $.
+
+add\_column\_GMP(HNF, column) $ \rightarrow $ $ \left[\text{HNF} | \text{column}\right] $ --- функция, используемая при нахождении ЭНФ. Принимает ЭНФ и возвращает $ \left[\text{HNF} | \text{column}\right] $. Использует реализацию больших чисел от GMP.
+
+reduce\_GMP(vector, matrix) $ \rightarrow $ reduced\_vector --- функция для сокращения вектора относительно диагональных элементов входного базиса. Использует реализацию больших чисел от GMP.
+
+generate\_random\_matrix\_with\_full\_row\_rank\_GMP(m, n, lowest, highest) $ \rightarrow $ matrix --- возвращает произвольную матрицу заданного размера с полным рангом строки с числами в заданном диапазоне. Использует реализацию больших чисел от GMP.
+
+generate\_random\_matrix\_GMP(m, n, lowest, highest) $ \rightarrow $ matrix --- возвращает произвольную матрицу заданного размера с числами в заданном диапазоне. Использует реализацию больших чисел от GMP.
+
+get\_linearly\_independent\_columns\_by\_gram\_schmidt\_GMP(matrix) $ \rightarrow $ result\_matrix --- возвращает линейно независимые столбцы матрицы и ортогонализованный базис. Использует реализацию больших чисел от GMP.
+
+get\_linearly\_independent\_rows\_by\_gram\_schmidt\_GMP(matrix) $ \rightarrow $ result\_matrix --- возвращает линейно независимые строки матрицы, их индексы в исходной матрице, индексы удаленных строк и матрицу $ \mathbf{T} $. Использует реализацию больших чисел от GMP.
+
+gcd\_extended\_GMP(a, b) $ \rightarrow $ g, x, y --- расширенный НОД алгоритм, возвращает g, x, y такие, что $ \mathrm{g} = \mathrm{xa} + \mathrm{yb} $.  Использует реализацию больших чисел от GMP.
+
+generate\_random\_matrix\_with\_full\_column\_rank(m, n, lowest, highest) $ \rightarrow $ matrix --- возвращает произвольную матрицу заданного размера с полным рангом столбца с числами в заданном диапазоне.
+
+generate\_random\_vector(m, lowest, highest) $ \rightarrow $ vector --- возвращает случайный вектор заданного размера с числами в заданном диапазоне.
+
+projection(matrix, vector) $ \rightarrow $ result\_vector --- возвращает $ \text{vector} \perp \text{matrix} $.
+
+closest\_vector(matrix, vector) $ \rightarrow $ result\_vector --- принимает набор векторов и целевой вектор, возвращает вектор из набора, ближайший к целевому.
+
+
 \subsection{Ортогонализация Грама-Шмидта}
 
-\begin{itemize}
+Реализация находится в файле algorithms.cpp в пространстве имен Utils и содержит 2 функции:
 
-\item 123
+\begin{enumerate}
 
-\end{itemize}
+\item gram\_schmidt\_sequential(matrix, delete\_zero\_rows) $ \rightarrow $ result\_GS --- принимает на вход матрицу и флаг, указывающий, следует ли удалять нулевые строки, и возвращает ортогонализацию Грама-Шмидта.
+
+\item gram\_schmidt\_parallel(matrix, delete\_zero\_rows) $ \rightarrow $ result\_GS --- принимает на вход матрицу и флаг, указывающий, следует ли удалять нулевые строки, и возвращает ортогонализацию Грама-Шмидта, вычисленную параллельным путем.
+
+\end{enumerate}
+
+\begin{table}[H]
+  \caption{Время нахождения ортогонализации Грама-Шмидта}
+  \centering
+  \begin{tabular}{ | l | l | l | l | l | l | l | }
+  \hline
+  m & 50 & 200 & 600 & 1000 & 2500 & 5000 \\ \hline
+  n & 50 & 200 & 600 & 1000 & 2500 & 5000  \\ \hline
+  Время, сек & 0.001 & 0.013 & 0.35 & 1.57 & 24.1 & 191.7 \\ \hline
+  \end{tabular}
+  \label{table:GS_SEQ}
+\end{table}
+
+\begin{table}[H]
+  \caption{Время параллельного нахождения ортогонализации Грама-Шмидта}
+  \centering
+  \begin{tabular}{ | l | l | l | l | l | l | l | }
+  \hline
+  m & 50 & 200 & 600 & 1000 & 2500 & 5000 \\ \hline
+  n & 50 & 200 & 600 & 1000 & 2500 & 5000  \\ \hline
+  Время, сек & 0.002 & 0.02 & 0.28 & 1.5 & 12.3 & 85.4 \\ \hline
+  \end{tabular}
+  \label{table:GS_PAR}
+\end{table}
 
 \subsection{Нахождение ЭНФ}
 
-В ходе работы была получена реализация с использованием библиотеки Boost.Multiprecision. Реализация находится в пространстве имен Algorithms::HNF и состоит из 4 функций:
+В ходе работы была получена реализация с использованием библиотеки Boost.Multiprecision. Реализация находится в файле algorithms.cpp в пространстве имен Algorithms::HNF и состоит из 4 функций:
 
 \begin{enumerate}
 
@@ -75,168 +144,10 @@
 
 По временам видно, что чем больше размер входной матрицы, тем сильнее идет замедление по времени. На матрицах больших размеров следует использовать реализацию, которая использует библиотеку GMP.
 
-\subsection{Применение ЭНФ}
-
-Будут рассмотрены некоторые проблемы и задачи теории решеток и их решение с помощью ЭНФ.
-
-\textbf{Нахождение базиса.} Дан набор рациональных векторов $ \mathbf{B} $, необходимо вычислить базис для $ \mathcal{L}(\mathbf{B}) $. Проблема решается за полиномиальное время путем вычисления $ \text{ЭНФ}(\mathbf{B}) $: 
-
-$ \mathbf{B} = \left[\begin{array}{cccc}
-2 & 2 \\
-1 & 0
-\end{array}\right] $, 
-$ \text{ЭНФ}(\mathbf{B}) = \left[\begin{array}{cccc}
-2 & 0 \\
-0 & 1
-\end{array}\right] $.
-
-\textbf{Проблема эквивалентности.} Дано два базиса $ \mathbf{B} $ и $ \mathbf{B}' $. Необходимо узнать, образуют ли они однинаковую решетку $ \mathcal{L}(\mathbf{B}) = \mathcal{L}(\mathbf{B}') $. Проблема решается путем вычисления $ \text{ЭНФ}(\mathbf{B}) $ и $ \text{ЭНФ}(\mathbf{B}') $ и сравнения их равенства:
-
-$ \mathbf{B} = \left[\begin{array}{cccc}
-1 & 0 \\
-0 & 1
-\end{array}\right] $, 
-$ \mathbf{B}' = \left[\begin{array}{cccc}
-1 & 0 \\
-1 & 1
-\end{array}\right] $, 
-$ \text{ЭНФ}(\mathbf{B}) = \left[\begin{array}{cccc}
-1 & 0 \\
-0 & 1
-\end{array}\right] $,
-$ \text{ЭНФ}(\mathbf{B}') = \left[\begin{array}{cccc}
-1 & 0 \\
-0 & 1
-\end{array}\right] $ --- образуют одинаковую решетку.
-
-$ \mathbf{B} = \left[\begin{array}{cccc}
-1 & 0 \\
-0 & 1
-\end{array}\right] $, 
-$ \mathbf{B}' = \left[\begin{array}{cccc}
-2 & 2 \\
-1 & 0
-\end{array}\right] $, 
-$ \text{ЭНФ}(\mathbf{B}) = \left[\begin{array}{cccc}
-1 & 0 \\
-0 & 1
-\end{array}\right] $,
-$ \text{ЭНФ}(\mathbf{B}') = \left[\begin{array}{cccc}
-2 & 0 \\
-0 & 1
-\end{array}\right] $ --- не образуют одинаковой решетки.
-
-\textbf{Объединение решеток.} Дано два базиса $ \mathbf{B} $ и $ \mathbf{B}' $. Необходимо найти базис для наименьшей решетки, содержащей обе решетки $ \mathcal{L}(\mathbf{B}) $ и $ \mathcal{L}(\mathbf{B}') $. Такая решетка будет сгенерирована от $ \left[\mathbf{B}|\mathbf{B}'\right] $, и можно легко найти ее базис через ЭНФ:
-
-$ \mathbf{B} = \left[\begin{array}{cccc}
-2 & 2 \\
-1 & 0
-\end{array}\right] $, 
-$ \mathbf{B}' = \left[\begin{array}{cccc}
-0 & 1 \\
-2 & 2
-\end{array}\right] $, 
-$ \left[\mathbf{B} | \mathbf{B}'\right] = \left[\begin{array}{cccc}
-2 & 2 & 0 & 1 \\
-1 & 0 & 2 & 2
-\end{array}\right] $, 
-$ \text{ЭНФ}(\left[\mathbf{B} | \mathbf{B}' \right]) = \left[\begin{array}{cccc}
-1 & 0 & 0 & 0 \\
-0 & 1 & 0 & 0
-\end{array}\right] $.
-
-\textbf{Проблема включения.} Дано два базиса $ \mathbf{B} $ и $ \mathbf{B}' $. Необходимо узнать, является ли $ \mathcal{L}(\mathbf{B}') $ подрешеткой $ \mathcal{L}(\mathbf{B}) $, т.е. $ \mathcal{L}(\mathbf{B}') \subseteq \mathcal{L}(\mathbf{B}) $. Эта проблема сводится к проблемам объединения и эквивалентности: $ \mathcal{L}(\mathbf{B}') \subseteq \mathcal{L}(\mathbf{B}) $ тогда и только тогда, когда $ \mathcal{L}(\left[\mathbf{B}|\mathbf{B}'\right]) = \mathcal{L}(\mathbf{B}) $. Для этого необходимо вычислить $ \text{ЭНФ}(\left[\mathbf{B} | \mathbf{B}' \right]) $ и $ \text{ЭНФ}(\mathbf{B}) $ и сравнения их равенства:
-
-$ \mathbf{B} = \left[\begin{array}{cccc}
-2 & 2 \\
-1 & 0
-\end{array}\right] $, 
-$ \mathbf{B}' = \left[\begin{array}{cccc}
-1 & 0 \\
-0 & 1
-\end{array}\right] $, 
-$ \left[\mathbf{B} | \mathbf{B}'\right] = \left[\begin{array}{cccc}
-2 & 2 & 1 & 0 \\
-1 & 0 & 0 & 1
-\end{array}\right] $, 
-$ \text{ЭНФ}(\left[\mathbf{B} | \mathbf{B}' \right]) = \left[\begin{array}{cccc}
-1 & 0 & 0 & 0 \\
-0 & 1 & 0 & 0
-\end{array}\right] $,
-$ \text{ЭНФ}(\mathbf{B}) = \left[\begin{array}{cccc}
-2 & 0 \\
-0 & 1
-\end{array}\right] $ --- $ \mathcal{L}(\mathbf{B}') $ не является подрешеткой $ \mathcal{L}(\mathbf{B}) $.
-
-$ \mathbf{B} = \left[\begin{array}{cccc}
-1 & 0 \\
-0 & 1
-\end{array}\right] $, 
-$ \mathbf{B}' = \left[\begin{array}{cccc}
-2 & 2 \\
-1 & 0
-\end{array}\right] $, 
-$ \left[\mathbf{B} | \mathbf{B}'\right] = \left[\begin{array}{cccc}
-1 & 0 & 2 & 2 \\
-0 & 1 & 1 & 0
-\end{array}\right] $, 
-$ \text{ЭНФ}(\left[\mathbf{B} | \mathbf{B}' \right]) = \left[\begin{array}{cccc}
-1 & 0 & 0 & 0 \\
-0 & 1 & 0 & 0
-\end{array}\right] $,
-$ \text{ЭНФ}(\mathbf{B}) = \left[\begin{array}{cccc}
-1 & 0 \\
-0 & 1
-\end{array}\right] $ --- $ \mathcal{L}(\mathbf{B}') $ является подрешеткой $ \mathcal{L}(\mathbf{B}) $.
-
-\textbf{Проблема содержания.} Дана решетка $ \mathbf{B} $ и вектор $ \mathbf{v} $, необходимо узнать, принадлежит ли вектор решетке ($ \mathbf{v} \subseteq \mathcal{L}(\mathbf{B}') $). Эта проблема сводится к проблеме включения путем проверки $ \mathcal{L}(\left[\mathbf{v}\right]) \subseteq \mathcal{L}(\mathbf{B}) $. Если необходимо проверить содержание нескольких векторов $ \mathbf{v}_1, \ldots, \mathbf{v}_n $, тогда следует сначала вычислить $ \mathbf{H} = \text{ЭНФ}(\mathbf{B}) $, и затем проверять, равно ли $ \mathbf{H} $ $ \text{ЭНФ}(\left[\mathbf{H} | \mathbf{v}_i \right]) $ для каждого вектора:
-
-$ \mathbf{B} = \left[\begin{array}{cccc}
-2 & 2 \\
-1 & 0
-\end{array}\right] $, 
-$ \mathbf{v} = \left[\begin{array}{cccc}
-2 \\
-0
-\end{array}\right] $, 
-$ \left[\mathbf{B} | \mathbf{B}'\right] = \left[\begin{array}{cccc}
-2 & 2 & 2 \\
-1 & 0 & 0
-\end{array}\right] $, 
-$ \text{ЭНФ}(\left[\mathbf{B} | \mathbf{v} \right]) = \left[\begin{array}{cccc}
-2 & 0 & 0 \\
-0 & 1 & 0
-\end{array}\right] $,
-$ \text{ЭНФ}(\mathbf{B}) = \left[\begin{array}{cccc}
-2 & 0 \\
-0 & 1
-\end{array}\right] $ --- вектор $ \mathbf{v} \subseteq \mathcal{L}(\mathbf{B}) $.
-
-
-$ \mathbf{B} = \left[\begin{array}{cccc}
-2 & 2 \\
-1 & 0
-\end{array}\right] $, 
-$ \mathbf{v} = \left[\begin{array}{cccc}
-1 \\
-0
-\end{array}\right] $, 
-$ \left[\mathbf{B} | \mathbf{B}'\right] = \left[\begin{array}{cccc}
-2 & 2 & 1 \\
-1 & 0 & 0
-\end{array}\right] $, 
-$ \text{ЭНФ}(\left[\mathbf{B} | \mathbf{v} \right]) = \left[\begin{array}{cccc}
-1 & 0 & 0 \\
-0 & 1 & 0
-\end{array}\right] $,
-$ \text{ЭНФ}(\mathbf{B}) = \left[\begin{array}{cccc}
-2 & 0 \\
-0 & 1
-\end{array}\right] $ --- вектор $ \mathbf{v} \not \subseteq \mathcal{L}(\mathbf{B}) $.
 
 \subsection{Решение ПБВ}
 
-Реализация находится в пространстве имен Algorithms::CVP и состоит из 4 функций:
+Реализация находится в файле algorithms.cpp в пространстве имен Algorithms::CVP и состоит из 4 функций:
 
 \begin{enumerate}
 
