@@ -189,11 +189,11 @@ closest\_vector(matrix, vector) $ \rightarrow $ result\_vector --- приним�
 \begin{table}[H]
   \caption{Время работы Branch and Bound}
   \centering
-  \begin{tabular}{ | l | l | l | l | l | l | }
+  \begin{tabular}{ | l | l | l | l | l | l | l | }
   \hline
-  m & 3 & 7 & 9 & 11 & 15 \\ \hline
-  n & 3 & 7 & 9 & 11 & 11 \\ \hline
-  Время, сек & 0.002 & 0.061 & 1.65 & 9.4 & 20.2 \\ \hline
+  m & 3 & 7 & 9 & 11 & 12 & 13 \\ \hline
+  n & 3 & 7 & 9 & 11 & 12 & 13 \\ \hline
+  Время, сек & 0.001 & 0.01 & 0.2 & 1.6 & 16.1 & 91.2 \\ \hline
   \end{tabular}
   \label{table:BB}
 \end{table}
@@ -201,11 +201,11 @@ closest\_vector(matrix, vector) $ \rightarrow $ result\_vector --- приним�
 \begin{table}[H]
   \caption{Время работы параллельного Branch and Bound}
   \centering
-  \begin{tabular}{ | l | l | l | l | l | l | l | }
+  \begin{tabular}{ | l | l | l | l | l | l | }
   \hline
-  m & 3 & 7 & 9 & 11 & 12 & 13 \\ \hline
-  n & 3 & 7 & 9 & 11 & 12 & 13 \\ \hline
-  Время, сек & 0.001 & 0.01 & 0.2 & 1.6 & 16.1 & 91.2 \\ \hline
+  m & 3 & 7 & 9 & 11 & 15 \\ \hline
+  n & 3 & 7 & 9 & 11 & 11 \\ \hline
+  Время, сек & 0.002 & 0.061 & 1.65 & 9.4 & 20.2 \\ \hline
   \end{tabular}
   \label{table:BB_parallel}
 \end{table}
