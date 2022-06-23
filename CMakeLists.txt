@@ -25,10 +25,10 @@ endif(BUILD_PARALLEL)
 
 if (BUILD_GMP)
      target_compile_definitions(${PROJECT_NAME} PUBLIC GMP)
+     target_link_libraries(${PROJECT_NAME} gmp libgmp)
 endif(BUILD_GMP)
 
 target_link_libraries(${PROJECT_NAME} OpenMP::OpenMP_CXX)
-target_link_libraries(${PROJECT_NAME} gmp libgmp)
 target_link_libraries(${PROJECT_NAME} Boost::config Boost::multiprecision)
 
 if (BUILD_DOCS)
